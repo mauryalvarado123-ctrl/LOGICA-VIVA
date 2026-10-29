@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LÓGICA VIVA - Lógica Digital Interactiva</title>
+    <title>LÓGICA VIVA - EdTech Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Varela+Round&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
@@ -27,89 +27,129 @@
         .port.out { right: -9px; top: 50%; transform: translateY(-50%); }
         .wire { fill: none; stroke: #3b82f6; stroke-width: 4; stroke-linecap: round; pointer-events: none; z-index: 10; }
 
-        /* --- LABORATORIO VIRTUAL (Dark Theme) --- */
-        .dark-grid-bg {
-            background-color: #06180f;
-            background-image: 
-                linear-gradient(#0f2b1c 1px, transparent 1px), 
-                linear-gradient(90deg, #0f2b1c 1px, transparent 1px);
-            background-size: 20px 20px;
+        /* --- TUTORIAL ESTILO BLOCKLY GAMES --- */
+        .blockly-tooltip {
+            position: absolute;
+            background: #2563eb;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            font-size: 13px;
+            font-weight: 800;
+            z-index: 100;
+            max-width: 240px;
+            animation: bounce 2s infinite;
+            pointer-events: none;
         }
+        .blockly-tooltip::after { content: ''; position: absolute; border-width: 8px; border-style: solid; }
+        .blockly-tooltip.arrow-bottom::after { bottom: -16px; left: 50%; transform: translateX(-50%); border-color: #2563eb transparent transparent transparent; }
+        .blockly-tooltip.arrow-top::after { top: -16px; left: 50%; transform: translateX(-50%); border-color: transparent transparent #2563eb transparent; }
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-8px); } 60% { transform: translateY(-4px); } }
+
+        /* --- LABORATORIO VIRTUAL (Dark Theme) --- */
+        .dark-grid-bg { background-color: #06180f; background-image: linear-gradient(#0f2b1c 1px, transparent 1px), linear-gradient(90deg, #0f2b1c 1px, transparent 1px); background-size: 20px 20px; }
         .lab-sidebar-scroll::-webkit-scrollbar-track { background: #030b07; }
         .lab-sidebar-scroll::-webkit-scrollbar-thumb { background: #1a422a; border-radius: 4px; }
         .accordion-content { display: none; }
         .accordion-content.active { display: block; }
         
-        .lab-comp {
-            position: absolute;
-            cursor: grab;
-            z-index: 10;
-            user-select: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+        .lab-comp { position: absolute; cursor: grab; z-index: 10; user-select: none; display: flex; align-items: center; justify-content: center; }
         .lab-comp:active { cursor: grabbing; }
         .lab-comp.selected { filter: drop-shadow(0 0 6px #facc15); }
-        .lab-comp-port {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            position: absolute;
-            border: 2px solid white;
-        }
+        .lab-comp-port { width: 12px; height: 12px; border-radius: 50%; position: absolute; border: 2px solid white; }
         .lab-comp-port.red { background-color: #ef4444; }
         .lab-comp-port.blue { background-color: #3b82f6; }
         
-        /* Estilos Tabla de Verdad */
-        .truth-table th, .truth-table td {
-            border: 1px solid #e2e8f0;
-            padding: 6px;
-            text-align: center;
-        }
+        /* Estilos Tablas */
+        .truth-table th, .truth-table td { border: 1px solid #e2e8f0; text-align: center; }
         .truth-table th { background-color: #f1f5f9; font-weight: 800; color: #334155; }
         .truth-table td.result { font-weight: 900; }
+
+        /* Toast Notifications & AI Tutor */
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 1000; max-width: 320px; }
+        .toast { animation: fadeIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        
+        #ai-tutor-btn { animation: float 4s ease-in-out infinite; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-12px); } 100% { transform: translateY(0px); } }
     </style>
 </head>
 <body class="flex flex-col h-screen text-gray-800 bg-slate-100">
 
-    <!-- NAVEGACIÓN VIBRANTE Y COLORIDA -->
-    <nav class="bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-500 text-white shadow-xl z-50 relative shrink-0">
-        <div class="max-w-7xl mx-auto px-4">
+    <!-- CONTENEDOR TOASTS -->
+    <div id="toast-container" class="flex flex-col gap-3"></div>
+
+    <!-- TUTOR IA FLOTANTE -->
+    <button id="ai-tutor-btn" onclick="triggerAITutor()" class="fixed bottom-6 left-6 w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white text-3xl shadow-[0_0_25px_rgba(99,102,241,0.6)] hover:scale-110 hover:shadow-[0_0_35px_rgba(99,102,241,0.8)] transition-all z-50 border-4 border-white">
+        <i class="fa-solid fa-robot"></i>
+    </button>
+
+    <!-- MODAL BLOCKLY -->
+    <div id="blockly-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl border-4 border-indigo-500 text-center transform transition-all scale-100">
+            <div class="w-24 h-24 bg-yellow-100 text-yellow-500 rounded-full flex items-center justify-center mx-auto mb-5 text-5xl shadow-inner">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <h3 id="modal-title" class="text-3xl font-black text-slate-800 title-font mb-2">¡Desafío Resuelto!</h3>
+            <p id="modal-message" class="text-slate-600 text-base font-semibold mb-2">¡Has completado exitosamente las conexiones lógicas!</p>
+            <p id="modal-xp" class="text-emerald-500 font-black text-2xl mb-8 bg-emerald-50 py-2 rounded-xl border border-emerald-100">+50 XP Obtenidos</p>
+            <div class="flex gap-4 justify-center">
+                <button onclick="closeBlocklyModal()" class="px-5 py-3 bg-slate-200 text-slate-700 font-extrabold rounded-xl hover:bg-slate-300 transition text-sm">Cerrar</button>
+                <button id="modal-next-btn" onclick="nextChallengeFromModal()" class="px-8 py-3 bg-indigo-600 text-white font-extrabold rounded-xl hover:bg-indigo-700 shadow-xl text-sm transition flex items-center gap-2">
+                    <span>Siguiente Nivel</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NAVEGACIÓN VIBRANTE Y GAMIFICADA -->
+    <nav class="bg-gradient-to-r from-slate-900 via-indigo-900 to-purple-900 text-white shadow-xl z-50 relative shrink-0">
+        <div class="max-w-[1400px] mx-auto px-4">
             <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
                 <div class="flex items-center space-x-3 font-extrabold text-2xl title-font tracking-wide">
-                    <div class="bg-white text-indigo-600 p-2 rounded-xl shadow-md flex items-center justify-center w-10 h-10">
+                    <div class="bg-gradient-to-br from-indigo-400 to-purple-500 text-white p-2 rounded-xl shadow-md flex items-center justify-center w-10 h-10 border border-white/20">
                         <i class="fa-solid fa-microchip text-xl"></i>
                     </div>
-                    <span class="bg-clip-text text-transparent bg-gradient-to-r from-yellow-300 via-white to-pink-200">Lógica Viva</span>
+                    <span class="bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-100 to-purple-200 hidden md:block">Lógica Viva EdTech</span>
                 </div>
-                <div class="flex space-x-2 md:space-x-4">
-                    <button onclick="switchTab('teoria')" id="btn-teoria" class="nav-btn px-4 py-2 rounded-xl bg-white/20 hover:bg-white/30 font-extrabold transition flex items-center gap-2"><i class="fa-solid fa-book-open"></i><span>Teoría</span></button>
-                    <button onclick="switchTab('desafio')" id="btn-desafio" class="nav-btn px-4 py-2 rounded-xl hover:bg-white/20 font-extrabold transition flex items-center gap-2"><i class="fa-solid fa-gamepad"></i><span>Desafío tu mente</span></button>
-                    <button onclick="switchTab('laboratorio')" id="btn-laboratorio" class="nav-btn px-4 py-2 rounded-xl hover:bg-white/20 font-extrabold transition flex items-center gap-2"><i class="fa-solid fa-flask"></i><span>Laboratorio</span></button>
-                    <button onclick="switchTab('evaluacion')" id="btn-evaluacion" class="nav-btn px-4 py-2 rounded-xl hover:bg-yellow-400 font-extrabold transition bg-yellow-400 text-slate-900 shadow-md flex items-center gap-2"><i class="fa-solid fa-star"></i><span>Evaluación</span></button>
+                
+                <!-- Pestañas -->
+                <div class="flex space-x-1 md:space-x-2">
+                    <button onclick="switchTab('teoria')" id="btn-teoria" class="nav-btn px-4 py-2 rounded-xl bg-white/20 hover:bg-white/30 font-extrabold transition flex items-center gap-2 text-sm"><i class="fa-solid fa-book-open"></i><span class="hidden md:inline">Teoría</span></button>
+                    <button onclick="switchTab('desafio')" id="btn-desafio" class="nav-btn px-4 py-2 rounded-xl hover:bg-white/20 font-extrabold transition flex items-center gap-2 text-sm"><i class="fa-solid fa-gamepad"></i><span class="hidden md:inline">Desafío</span></button>
+                    <button onclick="switchTab('laboratorio')" id="btn-laboratorio" class="nav-btn px-4 py-2 rounded-xl hover:bg-white/20 font-extrabold transition flex items-center gap-2 text-sm"><i class="fa-solid fa-flask"></i><span class="hidden md:inline">Laboratorio</span></button>
+                    <button onclick="switchTab('evaluacion')" id="btn-evaluacion" class="nav-btn px-4 py-2 rounded-xl hover:bg-yellow-400/90 font-extrabold transition bg-yellow-500 text-slate-900 shadow-md flex items-center gap-2 text-sm"><i class="fa-solid fa-star"></i><span class="hidden md:inline">Examen</span></button>
+                    <div class="w-px h-6 bg-white/20 my-auto mx-2"></div>
+                    <button onclick="switchTab('dashboard')" id="btn-dashboard" class="nav-btn px-4 py-2 rounded-xl hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 font-extrabold transition flex items-center gap-2 text-sm"><i class="fa-solid fa-chart-pie"></i><span class="hidden md:inline">Analítica</span></button>
+                </div>
+
+                <!-- Perfil Gamificado -->
+                <div class="hidden lg:flex items-center space-x-3 border-l border-white/20 pl-4">
+                    <div class="text-right">
+                        <p class="text-xs font-bold text-yellow-400 tracking-wider uppercase">Nivel <span id="ui-level">1</span></p>
+                        <p class="text-[11px] text-indigo-200 font-bold"><span id="ui-xp">0</span> / 500 XP</p>
+                    </div>
+                    <div class="w-10 h-10 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-full flex items-center justify-center border-2 border-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.3)]">
+                        <i class="fa-solid fa-user-graduate text-white text-sm"></i>
+                    </div>
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- 1. TEORÍA REDISEÑADA Y DIDÁCTICA PARA NOVENO GRADO -->
-    <div id="tab-teoria" class="tab-content flex-1 overflow-y-auto p-4 md:p-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
-        <div class="max-w-7xl mx-auto">
-            <!-- Encabezado Motivador -->
-            <div class="text-center mb-10 bg-white p-6 md:p-8 rounded-3xl shadow-lg border-2 border-indigo-100 relative overflow-hidden">
-                <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-indigo-100 rounded-full blur-2xl opacity-50"></div>
-                <div class="absolute -left-10 -top-10 w-40 h-40 bg-pink-100 rounded-full blur-2xl opacity-50"></div>
-                <span class="bg-indigo-100 text-indigo-700 font-bold px-4 py-1.5 rounded-full text-xs uppercase tracking-wider inline-block mb-3">Guía Didáctica para Estudiantes</span>
-                <h1 class="text-3xl md:text-5xl font-black text-slate-800 mb-3 title-font">⚡ Compuertas Lógicas y Circuitos</h1>
-                <p class="text-base md:text-lg text-slate-600 max-w-3xl mx-auto leading-relaxed">
-                    Las compuertas lógicas son los **bloques de construcción de las computadoras y celulares**. Reciben señales eléctricas en forma de **1 (Encendido / Hay corriente)** o **0 (Apagado / No hay corriente)** y toman decisiones lógicas instantáneas. ¡Pruébalas abajo en tiempo real!
-                </p>
+    <!-- 1. TEORÍA ORGANIZADA -->
+    <div id="tab-teoria" class="tab-content flex-1 flex overflow-hidden bg-slate-100">
+        <aside class="w-72 bg-white border-r border-slate-200 flex flex-col shrink-0 z-20 shadow-md">
+            <div class="p-5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
+                <h2 class="text-xl font-black title-font flex items-center gap-2"><i class="fa-solid fa-book-bookmark"></i>Biblioteca</h2>
+                <p class="text-xs text-indigo-100 mt-1">Fundamentos teóricos profundos.</p>
             </div>
-
-            <!-- Grilla de Compuertas con Explicaciones Claras + Simulador -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8" id="theory-container"></div>
-        </div>
+            <div class="flex-1 overflow-y-auto p-4 space-y-2" id="tomes-sidebar"></div>
+        </aside>
+        <main class="flex-1 overflow-y-auto p-6 md:p-10 bg-gradient-to-br from-indigo-50/50 via-purple-50/30 to-pink-50/50" id="tome-content-container"></main>
     </div>
 
     <!-- 2. DESAFÍO TU MENTE -->
@@ -117,91 +157,75 @@
         <div class="w-80 bg-white border-r border-indigo-100 shadow-md flex flex-col z-30 shrink-0">
             <div class="p-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
                 <h2 class="text-xl font-black title-font flex items-center gap-2"><i class="fa-solid fa-brain"></i>Retos Lógicos</h2>
-                <p class="text-xs text-indigo-100 mt-1">Supera cada nivel construyendo circuitos.</p>
+                <p class="text-xs text-indigo-100 mt-1">Supera cada nivel y gana XP.</p>
             </div>
             <div class="flex-1 overflow-y-auto p-4 space-y-6" id="levels-sidebar"></div>
         </div>
         <div class="flex-1 flex flex-col relative bg-slate-50">
             <div class="h-auto min-h-16 py-3 bg-white border-b border-slate-200 flex items-center justify-between px-6 shadow-sm z-30">
                 <div class="flex-1 pr-4">
-                    <h3 id="current-challenge-title" class="text-xl font-extrabold text-slate-800">Selecciona un desafío</h3>
-                    <p id="current-challenge-desc" class="text-sm text-slate-600 mt-1">Usa la lógica para resolver el problema.</p>
+                    <h3 id="current-challenge-title" class="text-xl font-extrabold text-slate-800">Nivel 0: Tutorial Interactivo</h3>
+                    <p id="current-challenge-desc" class="text-sm text-slate-600 mt-1">Aprende a agregar componentes y conectarlos.</p>
                 </div>
                 <div class="space-x-3 shrink-0 flex flex-col items-end">
-                    <div class="flex space-x-2 mb-2">
-                        <button onclick="clearChallengeCanvas()" class="px-4 py-2 bg-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-300 transition shadow-sm"><i class="fa-solid fa-trash mr-2"></i>Limpiar</button>
-                        <button onclick="runChallengeSimulation()" class="px-6 py-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-extrabold rounded-xl hover:opacity-90 transition shadow-md"><i class="fa-solid fa-play mr-2"></i>Verificar</button>
+                    <div class="flex space-x-2 mb-1">
+                        <button onclick="clearChallengeCanvas()" class="px-4 py-2 bg-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-300 transition shadow-sm text-sm"><i class="fa-solid fa-trash mr-1.5"></i>Reiniciar</button>
+                        <button id="verify-challenge-btn" onclick="runChallengeSimulation()" class="px-6 py-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-extrabold rounded-xl hover:opacity-90 transition shadow-md text-sm flex items-center gap-1.5"><i class="fa-solid fa-play"></i><span>Verificar</span></button>
                     </div>
                 </div>
             </div>
             <div id="node-canvas" class="flex-1 relative overflow-hidden grid-bg">
                 <svg id="wires-layer" class="absolute top-0 left-0 w-full h-full pointer-events-none z-10"></svg>
                 <div id="nodes-container" class="absolute top-0 left-0 w-full h-full pointer-events-none z-20"></div>
-                
-                <!-- Caja de Requisitos del Reto -->
-                <div class="absolute top-4 right-4 bg-white/95 backdrop-blur-sm p-4 rounded-2xl shadow-xl border border-indigo-100 w-64 z-30 pointer-events-none">
-                    <h4 class="font-extrabold text-indigo-900 mb-2 border-b border-indigo-100 pb-1 text-sm flex items-center gap-2"><i class="fa-solid fa-clipboard-list text-indigo-500"></i>Requisitos</h4>
-                    <p id="current-materials" class="text-xs text-slate-700 whitespace-pre-line leading-relaxed font-semibold"></p>
+                <div id="tutorial-tooltip" class="blockly-tooltip hidden arrow-bottom"><span id="tooltip-text">Haz clic aquí para añadir un componente.</span></div>
+                <div class="absolute top-4 right-4 bg-white/95 backdrop-blur-sm p-5 rounded-2xl shadow-xl border border-indigo-100 w-72 z-30 pointer-events-none">
+                    <h4 class="font-extrabold text-indigo-900 mb-3 border-b border-indigo-100 pb-2 text-sm flex items-center gap-2"><i class="fa-solid fa-clipboard-list text-indigo-500"></i>Requisitos</h4>
+                    <p id="current-materials" class="text-sm text-slate-700 whitespace-pre-line leading-relaxed font-semibold"></p>
                 </div>
-
-                <!-- Barra de Herramientas Inferior -->
-                <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur-md px-6 py-3 rounded-2xl shadow-2xl border border-indigo-100 flex space-x-4 z-40 pointer-events-auto overflow-x-auto max-w-[95%] items-center">
-                    <button onclick="addChallengeNode('BATTERY')" class="flex flex-col items-center hover:scale-110 transition px-1"><span class="text-2xl">🔋</span><span class="text-[10px] font-black text-slate-600 mt-0.5">Batería</span></button>
-                    <button onclick="addChallengeNode('SWITCH')" class="flex flex-col items-center hover:scale-110 transition px-1"><span class="text-2xl">🕹️</span><span class="text-[10px] font-black text-slate-600 mt-0.5">Switch</span></button>
-                    <div class="w-px h-8 bg-slate-200 my-auto"></div>
-                    
-                    <!-- Compuertas con Nombre y Símbolo -->
-                    <button onclick="addChallengeNode('AND')" class="flex flex-col items-center hover:scale-110 transition px-1"><span class="text-lg font-black text-blue-600">D</span><span class="text-[10px] font-black text-slate-600">AND</span></button>
-                    <button onclick="addChallengeNode('OR')" class="flex flex-col items-center hover:scale-110 transition px-1"><span class="text-lg font-black text-emerald-600">)D</span><span class="text-[10px] font-black text-slate-600">OR</span></button>
-                    <button onclick="addChallengeNode('NOT')" class="flex flex-col items-center hover:scale-110 transition px-1"><span class="text-lg font-black text-red-600">▷○</span><span class="text-[10px] font-black text-slate-600">NOT</span></button>
-                    <button onclick="addChallengeNode('NAND')" class="flex flex-col items-center hover:scale-110 transition px-1"><span class="text-lg font-black text-purple-600">D○</span><span class="text-[10px] font-black text-slate-600">NAND</span></button>
-                    <button onclick="addChallengeNode('NOR')" class="flex flex-col items-center hover:scale-110 transition px-1"><span class="text-lg font-black text-orange-600">)○</span><span class="text-[10px] font-black text-slate-600">NOR</span></button>
-                    <button onclick="addChallengeNode('XOR')" class="flex flex-col items-center hover:scale-110 transition px-1"><span class="text-lg font-black text-teal-600">))D</span><span class="text-[10px] font-black text-slate-600">XOR</span></button>
-                    <button onclick="addChallengeNode('XNOR')" class="flex flex-col items-center hover:scale-110 transition px-1"><span class="text-lg font-black text-pink-600">))○</span><span class="text-[10px] font-black text-slate-600">XNOR</span></button>
-                    
-                    <div class="w-px h-8 bg-slate-200 my-auto"></div>
-                    <button onclick="addChallengeNode('LED')" class="flex flex-col items-center hover:scale-110 transition px-1"><span class="text-2xl">💡</span><span class="text-[10px] font-black text-slate-600 mt-0.5">LED</span></button>
+                <div id="toolbar-container" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur-md px-8 py-4 rounded-3xl shadow-2xl border border-indigo-100 flex space-x-6 z-40 pointer-events-auto overflow-x-auto max-w-[95%] items-center">
+                    <button id="btn-tool-bat" onclick="addChallengeNode('BATTERY')" class="flex flex-col items-center hover:scale-110 transition px-2"><span class="text-3xl mb-1">🔋</span><span class="text-[11px] font-black text-slate-600">Batería</span></button>
+                    <button id="btn-tool-sw" onclick="addChallengeNode('SWITCH')" class="flex flex-col items-center hover:scale-110 transition px-2"><span class="text-3xl mb-1">🕹️</span><span class="text-[11px] font-black text-slate-600">Switch</span></button>
+                    <div class="w-px h-10 bg-slate-300 my-auto"></div>
+                    <button onclick="addChallengeNode('AND')" class="flex flex-col items-center hover:scale-110 transition px-2"><span class="text-2xl font-black text-blue-600 mb-1">D</span><span class="text-[11px] font-black text-slate-600">AND</span></button>
+                    <button onclick="addChallengeNode('OR')" class="flex flex-col items-center hover:scale-110 transition px-2"><span class="text-2xl font-black text-emerald-600 mb-1">)D</span><span class="text-[11px] font-black text-slate-600">OR</span></button>
+                    <button onclick="addChallengeNode('NOT')" class="flex flex-col items-center hover:scale-110 transition px-2"><span class="text-2xl font-black text-red-600 mb-1">▷○</span><span class="text-[11px] font-black text-slate-600">NOT</span></button>
+                    <button onclick="addChallengeNode('NAND')" class="flex flex-col items-center hover:scale-110 transition px-2"><span class="text-2xl font-black text-purple-600 mb-1">D○</span><span class="text-[11px] font-black text-slate-600">NAND</span></button>
+                    <button onclick="addChallengeNode('NOR')" class="flex flex-col items-center hover:scale-110 transition px-2"><span class="text-2xl font-black text-orange-600 mb-1">)○</span><span class="text-[11px] font-black text-slate-600">NOR</span></button>
+                    <button onclick="addChallengeNode('XOR')" class="flex flex-col items-center hover:scale-110 transition px-2"><span class="text-2xl font-black text-teal-600 mb-1">))D</span><span class="text-[11px] font-black text-slate-600">XOR</span></button>
+                    <button onclick="addChallengeNode('XNOR')" class="flex flex-col items-center hover:scale-110 transition px-2"><span class="text-2xl font-black text-pink-600 mb-1">))○</span><span class="text-[11px] font-black text-slate-600">XNOR</span></button>
+                    <div class="w-px h-10 bg-slate-300 my-auto"></div>
+                    <button id="btn-tool-led" onclick="addChallengeNode('LED')" class="flex flex-col items-center hover:scale-110 transition px-2"><span class="text-3xl mb-1">💡</span><span class="text-[11px] font-black text-slate-600">LED</span></button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 3. LABORATORIO VIRTUAL -->
+    <!-- 3. LABORATORIO VIRTUAL PROFESIONAL -->
     <div id="tab-laboratorio" class="tab-content hidden flex-1 flex h-full bg-[#030b07] text-gray-300">
         <aside class="w-72 bg-[#06120b] border-r border-[#132e1f] flex flex-col shrink-0 z-20">
-            <div class="p-4 border-b border-[#132e1f]">
+            <div class="p-4 border-b border-[#132e1f] flex justify-between items-center">
                 <h2 class="text-[#e2a862] font-extrabold text-lg title-font tracking-wide">Componentes</h2>
             </div>
             
             <div class="flex-1 overflow-y-auto lab-sidebar-scroll">
                 <div class="border-b border-[#132e1f]">
                     <button class="w-full text-left p-3 bg-[#0a1f14] hover:bg-[#112d1f] text-[#facc15] font-semibold text-sm flex justify-between items-center transition" onclick="toggleAccordion('acc-fuentes')">
-                        <span><i class="fa-regular fa-lightbulb mr-2"></i>Fuentes y Luces LED</span>
+                        <span><i class="fa-regular fa-lightbulb mr-2"></i>Fuentes y LEDs</span>
                         <i class="fa-solid fa-caret-down text-xs"></i>
                     </button>
                     <div id="acc-fuentes" class="accordion-content active p-2 space-y-2 bg-[#06120b]">
                         <div class="draggable-lab-item bg-[#0d1f16] border border-[#1a3826] text-xs p-2 rounded flex items-center hover:bg-[#142e20] cursor-grab transition" draggable="true" data-type="bat">
-                            <span class="w-8 h-4 border border-gray-400 mr-3 text-[8px] flex items-center justify-center bg-gray-800 text-white rounded-sm">5V DC</span>
-                            Pila 5V DC
+                            <span class="w-8 h-4 border border-gray-400 mr-3 text-[8px] flex items-center justify-center bg-gray-800 text-white rounded-sm">5V DC</span>Pila 5V DC
                         </div>
-                        <div class="draggable-lab-item bg-[#0d1f16] border border-[#1a3826] text-xs p-2 rounded flex items-center hover:bg-[#142e20] cursor-grab transition" draggable="true" data-type="led-r">
-                            <i class="fa-solid fa-caret-right text-red-500 mr-3 text-lg"></i> LED Rojo
-                        </div>
-                        <div class="draggable-lab-item bg-[#0d1f16] border border-[#1a3826] text-xs p-2 rounded flex items-center hover:bg-[#142e20] cursor-grab transition" draggable="true" data-type="led-y">
-                            <i class="fa-solid fa-caret-right text-yellow-500 mr-3 text-lg"></i> LED Amarillo
-                        </div>
-                        <div class="draggable-lab-item bg-[#0d1f16] border border-[#1a3826] text-xs p-2 rounded flex items-center hover:bg-[#142e20] cursor-grab transition" draggable="true" data-type="led-g">
-                            <i class="fa-solid fa-caret-right text-green-500 mr-3 text-lg"></i> LED Verde
-                        </div>
-                        <div class="draggable-lab-item bg-[#0d1f16] border border-[#1a3826] text-xs p-2 rounded flex items-center hover:bg-[#142e20] cursor-grab transition" draggable="true" data-type="led-b">
-                            <i class="fa-solid fa-caret-right text-blue-500 mr-3 text-lg"></i> LED Azul
-                        </div>
+                        <div class="draggable-lab-item bg-[#0d1f16] border border-[#1a3826] text-xs p-2 rounded flex items-center hover:bg-[#142e20] cursor-grab transition" draggable="true" data-type="led-r"><i class="fa-solid fa-caret-right text-red-500 mr-3 text-lg"></i> LED Rojo</div>
+                        <div class="draggable-lab-item bg-[#0d1f16] border border-[#1a3826] text-xs p-2 rounded flex items-center hover:bg-[#142e20] cursor-grab transition" draggable="true" data-type="led-y"><i class="fa-solid fa-caret-right text-yellow-500 mr-3 text-lg"></i> LED Amarillo</div>
+                        <div class="draggable-lab-item bg-[#0d1f16] border border-[#1a3826] text-xs p-2 rounded flex items-center hover:bg-[#142e20] cursor-grab transition" draggable="true" data-type="led-g"><i class="fa-solid fa-caret-right text-green-500 mr-3 text-lg"></i> LED Verde</div>
                     </div>
                 </div>
 
                 <div class="border-b border-[#132e1f]">
                     <button class="w-full text-left p-3 bg-[#0a1f14] hover:bg-[#112d1f] text-[#f87171] font-semibold text-sm flex justify-between items-center transition" onclick="toggleAccordion('acc-res')">
-                        <span><i class="fa-solid fa-bolt mr-2"></i>Resistencias e Switches</span>
+                        <span><i class="fa-solid fa-bolt mr-2"></i>Switches y Resistencias</span>
                         <i class="fa-solid fa-caret-down text-xs"></i>
                     </button>
                     <div id="acc-res" class="accordion-content p-2 space-y-2 bg-[#06120b]">
@@ -210,8 +234,7 @@
                             Resistencia 220 Ω
                         </div>
                         <div class="draggable-lab-item bg-[#0d1f16] border border-[#1a3826] text-xs p-2 rounded flex items-center hover:bg-[#142e20] cursor-grab transition" draggable="true" data-type="sw">
-                            <div class="w-6 h-3 border border-gray-400 mr-3 flex items-center justify-center text-[6px]">_ / _</div>
-                            Interruptor Switch
+                            <div class="w-6 h-3 border border-gray-400 mr-3 flex items-center justify-center text-[6px]">_ / _</div> Interruptor Switch
                         </div>
                     </div>
                 </div>
@@ -219,9 +242,13 @@
         </aside>
 
         <main class="flex-1 relative overflow-hidden dark-grid-bg" id="dark-lab-workspace">
-            <div class="absolute top-4 right-4 z-30">
-                <div class="bg-[#0b1b11] border border-[#20442c] text-[#e2a862] text-sm px-4 py-1.5 rounded-xl flex items-center shadow-lg font-semibold tracking-wide">
-                    <i class="fa-solid fa-bolt text-yellow-500 mr-2 text-xs"></i> Simulando en Vivo
+            <div class="absolute top-4 right-4 z-30 flex gap-3">
+                <!-- Mockup de Multijugador / Colaboración Síncrona -->
+                <button onclick="simMultijugador()" class="bg-[#1f2937]/90 border border-[#374151] text-[#9ca3af] hover:text-white hover:bg-indigo-600 hover:border-indigo-500 text-xs px-4 py-2 rounded-xl flex items-center shadow-lg font-bold transition">
+                    <i class="fa-solid fa-users mr-2"></i> Iniciar Sesión Compartida
+                </button>
+                <div class="bg-[#0b1b11]/90 border border-[#20442c] text-[#e2a862] text-xs px-4 py-2 rounded-xl flex items-center shadow-lg font-bold">
+                    <i class="fa-solid fa-bolt text-yellow-500 mr-2"></i> Motor WebGL Activo
                 </div>
             </div>
             <div id="dark-lab-canvas" class="absolute top-0 left-0 w-full h-full"></div>
@@ -232,374 +259,431 @@
                 <h2 id="prop-title" class="text-[#e2a862] font-bold text-lg title-font tracking-wide">Propiedades</h2>
             </div>
             <div class="p-4 flex flex-col flex-1">
-                <div id="prop-empty" class="text-sm text-gray-500 italic text-center mt-10">
-                    Selecciona un componente del área de trabajo para ver sus propiedades.
-                </div>
+                <div id="prop-empty" class="text-sm text-gray-500 italic text-center mt-10">Selecciona un componente para inspeccionar.</div>
                 <div id="prop-content" class="hidden flex-col gap-4">
                     <h3 id="comp-name-display" class="font-bold text-gray-200 text-sm mb-4">LED Rojo</h3>
-                    <button id="btn-delete-comp" class="w-full py-2 border border-red-800 text-red-500 rounded text-sm hover:bg-red-950 transition font-semibold">
-                        Eliminar Pieza
-                    </button>
+                    <button id="btn-delete-comp" class="w-full py-2 border border-red-800 text-red-500 rounded text-sm hover:bg-red-950 transition font-semibold">Eliminar Pieza</button>
                 </div>
             </div>
         </aside>
     </div>
 
-    <!-- 4. EVALUACIÓN FINAL -->
-    <div id="tab-evaluacion" class="tab-content hidden flex-1 bg-white overflow-y-auto">
-        <div class="max-w-4xl mx-auto p-6 md:p-10">
-            <div class="text-center mb-8">
-                <span class="bg-yellow-100 text-yellow-800 font-bold px-4 py-1.5 rounded-full text-xs uppercase tracking-wider inline-block mb-2">Pon a prueba tus conocimientos</span>
-                <h1 class="text-4xl font-black text-slate-800 mb-2 title-font">Evaluación Final</h1>
-                <p class="text-slate-600">Demuestra lo que aprendiste. 10 preguntas aleatorias ideales para nivel secundaria.</p>
+    <!-- 4. DASHBOARD ANALÍTICO -->
+    <div id="tab-dashboard" class="tab-content hidden flex-1 bg-slate-50 overflow-y-auto">
+        <div class="max-w-6xl mx-auto p-6 md:p-10">
+            <div class="flex justify-between items-end mb-8">
+                <div>
+                    <h1 class="text-4xl font-black text-slate-800 title-font flex items-center gap-3">
+                        <i class="fa-solid fa-chart-pie text-indigo-500"></i> Learning Analytics
+                    </h1>
+                    <p class="text-slate-600 mt-2 font-semibold text-lg">Métricas de progreso predictivo y rendimiento lógico.</p>
+                </div>
+                <button onclick="showToast('Exportando reporte PDF (Simulado)...', 'success')" class="px-6 py-3 bg-slate-800 text-white rounded-xl font-bold text-sm shadow-md hover:bg-slate-700 transition">
+                    <i class="fa-solid fa-download mr-2"></i>Exportar Reporte LTI
+                </button>
             </div>
-            <div id="quiz-container" class="space-y-6"></div>
-            <div id="quiz-result" class="hidden mt-8 p-6 rounded-2xl text-center font-black text-2xl shadow-lg border-2"></div>
-            <div class="mt-8 flex justify-center pb-20">
-                <button onclick="gradeQuiz()" id="btn-grade-quiz" class="px-8 py-3 bg-indigo-600 text-white font-extrabold rounded-2xl hover:bg-indigo-700 shadow-xl text-lg transition">Calificar Examen</button>
-                <button onclick="startQuiz()" id="btn-restart-quiz" class="hidden px-8 py-3 bg-slate-600 text-white font-extrabold rounded-2xl hover:bg-slate-700 shadow-xl text-lg ml-4 transition">Intentar de Nuevo</button>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col">
+                    <span class="text-slate-400 font-black text-xs uppercase tracking-wider mb-2">Tasa de Acierto</span>
+                    <span class="text-5xl font-black text-emerald-500">85%</span>
+                    <span class="text-xs font-bold text-emerald-600 mt-3 bg-emerald-50 w-fit px-2 py-1 rounded-md">↑ 12% vs Promedio</span>
+                </div>
+                <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col">
+                    <span class="text-slate-400 font-black text-xs uppercase tracking-wider mb-2">Retos Completados</span>
+                    <span class="text-5xl font-black text-indigo-500" id="dash-retos">1/19</span>
+                    <span class="text-sm font-bold text-slate-500 mt-3">Nivel actual: Básico</span>
+                </div>
+                <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col">
+                    <span class="text-slate-400 font-black text-xs uppercase tracking-wider mb-2">Tiempo de Simulación</span>
+                    <span class="text-5xl font-black text-purple-500">4.2<span class="text-2xl">h</span></span>
+                    <span class="text-sm font-bold text-slate-500 mt-3">Práctica activa total</span>
+                </div>
+                <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col">
+                    <span class="text-slate-400 font-black text-xs uppercase tracking-wider mb-2">Puntos Experiencia</span>
+                    <span class="text-5xl font-black text-yellow-500" id="dash-xp">0</span>
+                    <span class="text-sm font-bold text-yellow-600 mt-3 bg-yellow-50 w-fit px-2 py-1 rounded-md">Rango: Principiante</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
+                    <h3 class="font-extrabold text-xl text-slate-800 mb-6">Competencias Dominadas (Motor IA)</h3>
+                    <div class="space-y-6">
+                        <div>
+                            <div class="flex justify-between text-sm font-bold text-slate-600 mb-2"><span>Lógica Combinacional (AND/OR)</span><span>90%</span></div>
+                            <div class="w-full bg-slate-100 rounded-full h-3"><div class="bg-indigo-500 h-3 rounded-full" style="width: 90%"></div></div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm font-bold text-slate-600 mb-2"><span>Álgebra de Boole e Inversores</span><span>65%</span></div>
+                            <div class="w-full bg-slate-100 rounded-full h-3"><div class="bg-purple-500 h-3 rounded-full" style="width: 65%"></div></div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm font-bold text-slate-600 mb-2"><span>Circuitos Secuenciales / Complejos</span><span>20%</span></div>
+                            <div class="w-full bg-slate-100 rounded-full h-3"><div class="bg-pink-500 h-3 rounded-full" style="width: 20%"></div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-indigo-600 p-8 rounded-3xl shadow-lg relative overflow-hidden text-white">
+                    <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+                    <h3 class="font-extrabold text-2xl mb-4 flex items-center gap-3"><i class="fa-solid fa-server"></i> Estado de Infraestructura</h3>
+                    <p class="text-base text-indigo-200 font-semibold mb-8">El sistema está corriendo en arquitectura Cloud simulada con latencia ultra-baja y conectores educacionales activos.</p>
+                    <ul class="space-y-4 text-base font-bold">
+                        <li class="flex items-center gap-3"><div class="w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_10px_#34d399]"></div> Motor Lógico WebGL Activo</li>
+                        <li class="flex items-center gap-3"><div class="w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_10px_#34d399]"></div> IA Adaptativa de Telemetría en línea</li>
+                        <li class="flex items-center gap-3"><div class="w-3 h-3 rounded-full bg-slate-400"></div> WebSockets (LTI) - Desconectado</li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- SCRIPTS CON DATOS DE TEORÍA EXPANDIDOS Y COLORES VISUALES -->
+    <!-- 5. EVALUACIÓN FINAL -->
+    <div id="tab-evaluacion" class="tab-content hidden flex-1 bg-white overflow-y-auto">
+        <div class="max-w-4xl mx-auto p-6 md:p-10">
+            <div class="text-center mb-10">
+                <span class="bg-yellow-100 text-yellow-800 font-bold px-4 py-1.5 rounded-full text-xs uppercase tracking-wider inline-block mb-3 shadow-sm">Certificación de Saberes</span>
+                <h1 class="text-5xl font-black text-slate-800 mb-3 title-font">Evaluación Final</h1>
+                <p class="text-slate-600 text-lg">Demuestra lo que aprendiste para certificar tus conocimientos y ganar XP masivo.</p>
+            </div>
+            <div id="quiz-container" class="space-y-6"></div>
+            <div id="quiz-result" class="hidden mt-8 p-6 rounded-2xl text-center font-black text-2xl shadow-lg border-2"></div>
+            <div class="mt-10 flex justify-center pb-20">
+                <button onclick="gradeQuiz()" id="btn-grade-quiz" class="px-8 py-4 bg-indigo-600 text-white font-extrabold rounded-2xl hover:bg-indigo-700 shadow-xl text-lg transition">Calificar Examen</button>
+                <button onclick="startQuiz()" id="btn-restart-quiz" class="hidden px-8 py-4 bg-slate-600 text-white font-extrabold rounded-2xl hover:bg-slate-700 shadow-xl text-lg ml-4 transition">Intentar de Nuevo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS CON LÓGICA COMPLETA Y GAMIFICACIÓN -->
     <script>
-        // --- NAVEGACIÓN ---
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
-            document.querySelectorAll('.nav-btn').forEach(el => {
-                el.classList.remove('bg-white/30', 'bg-yellow-500');
-            });
-            let activeBtn = document.getElementById(`btn-${tabId}`);
-            if(tabId === 'evaluacion') activeBtn.classList.add('bg-yellow-500');
-            else activeBtn.classList.add('bg-white/30');
+        // --- SISTEMA DE GAMIFICACIÓN ---
+        let userXP = 0;
+        let userLevel = 1;
+        let completedChallengesCount = 0;
+
+        function addXP(amount) {
+            userXP += amount;
+            if(userXP >= 500 * userLevel) {
+                userLevel++;
+                showToast(`¡Subiste al Nivel ${userLevel}!`, 'success');
+            }
+            document.getElementById('ui-xp').innerText = userXP;
+            document.getElementById('ui-level').innerText = userLevel;
+            document.getElementById('dash-xp').innerText = userXP;
         }
 
-        // --- 1. TEORÍA COMPLETA Y DETALLADA ---
-        const gates = [
+        // --- UTILIDADES ---
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bg = type === 'success' ? 'bg-emerald-600 text-white' : (type === 'error' ? 'bg-red-600 text-white' : 'bg-indigo-600 text-white');
+            toast.className = `toast px-5 py-4 rounded-2xl font-bold text-sm flex items-start gap-3 ${bg}`;
+            toast.innerHTML = `<i class="fa-solid mt-0.5 ${type === 'success' ? 'fa-circle-check' : (type==='error'?'fa-triangle-exclamation':'fa-circle-info')} text-lg"></i><span class="leading-snug">${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4500);
+        }
+
+        // --- TUTOR IA CON CONTEXTO ---
+        let currentTab = 'teoria';
+        function triggerAITutor() {
+            let tip = "";
+            if (currentTab === 'teoria') {
+                tip = tomesData[selectedTomeIdx].botTip;
+            } else if (currentTab === 'desafio') {
+                tip = "🤖 Pista IA: Revisa bien los requisitos. Identifica si necesitas que todo se cumpla (AND), o solo una cosa (OR), o invertir (NOT).";
+            } else if (currentTab === 'laboratorio') {
+                tip = "🤖 Sugerencia del Tutor: En un circuito real, los LEDs siempre necesitan una Resistencia para no quemarse. ¡Arrastra una al lienzo!";
+            } else if (currentTab === 'evaluacion') {
+                tip = "🤖 Analítica IA: Lee despacio. Recuerda que NAND y NOR son compuertas Universales. ¡Confía en lo aprendido!";
+            } else if (currentTab === 'dashboard') {
+                tip = "🤖 ¡Buen progreso! Superar los retos del Nivel 3 y 4 te dará muchísima experiencia en Circuitos Complejos.";
+            }
+            showToast(tip, "info");
+        }
+
+        function simMultijugador() {
+            showToast("Intentando conexión WebSocket segura...", "info");
+            setTimeout(() => showToast("Error de Backend: No se encontró servidor LTI activo. Mantenemos Sesión Local.", "error"), 2000);
+        }
+
+        function switchTab(tabId) {
+            currentTab = tabId;
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-btn').forEach(el => {
+                el.classList.remove('bg-white/30', 'bg-yellow-500', 'bg-emerald-500/20');
+            });
+            
+            let activeBtn = document.getElementById(`btn-${tabId}`);
+            if(tabId === 'evaluacion') activeBtn.classList.add('bg-yellow-500');
+            else if (tabId === 'dashboard') activeBtn.classList.add('bg-emerald-500/20');
+            else activeBtn.classList.add('bg-white/30');
+
+            if(tabId === 'desafio' && currentChallengeIdx === 0) setTimeout(updateTutorialState, 300);
+        }
+
+        // --- 1. TEORÍA POR TOMOS AMPLIADA ---
+        const tomesData = [
             { 
-                name: "AND", 
-                symbol: "D",
-                color: "from-blue-500 to-indigo-600",
-                badge: "bg-blue-100 text-blue-700",
-                badgeText: "Compuerta 'Y' (Multiplicadora)",
-                rule: "¡Exigente! La salida solo enciende (1) si TODAS sus entradas están encendidas (1).", 
-                analogy: "🔑🔑 **Caja fuerte de dos llaves:** Se necesitan girar la llave A **Y** la llave B al mismo tiempo para abrir la puerta.",
-                desc: "Si alguna entrada es 0, la salida automáticamente será 0.",
-                func: (a,b)=>a&&b, 
-                tt: [[0,0,0], [0,1,0], [1,0,0], [1,1,1]] 
+                id: 'and', 
+                title: 'Tomo I: Compuerta AND', 
+                badge: 'Multiplicación', 
+                symbol: 'D', 
+                color: 'from-blue-600 to-indigo-700', 
+                rule: 'La salida es 1 (Alto) ÚNICAMENTE si TODAS sus entradas están en 1 (Alto).', 
+                expression: 'S = A · B', 
+                intro: 'La compuerta AND representa el producto lógico en el Álgebra de Boole. Funciona bajo el principio de inclusión estricta, lo que significa que requiere que todas y cada una de las condiciones previas se cumplan simultáneamente para emitir una respuesta afirmativa. Matemáticamente, es análoga a la multiplicación binaria: 1x1=1, y cualquier otra combinación por 0 da 0.', 
+                transistorDesc: 'En tecnología TTL (Lógica Transistor-Transistor), una compuerta AND real se construye típicamente combinando una etapa NAND seguida de un inversor NOT. Físicamente, imagina múltiples transistores conectados en serie: la corriente eléctrica debe atravesar obligatoriamente el primer canal para tener siquiera la oportunidad de llegar al segundo.', 
+                realWorld: 'Sistemas críticos de seguridad como el lanzamiento de misiles (dos llaves distanciadas giradas a la vez), cajeros automáticos (tarjeta física insertada Y contraseña PIN correcta), y sistemas de prensado industrial (el operador presiona dos botones alejados simultáneamente para evitar aplastar sus manos).',
+                botTip: '🤖 Dato curioso: George Boole definió la operación AND usando la intersección de conjuntos matemáticos. ¡Todo debe cruzarse para ser verdad!',
+                inputs: 2, func: (a,b) => a && b, tt: [[0,0,0], [0,1,0], [1,0,0], [1,1,1]] 
             },
             { 
-                name: "OR", 
-                symbol: ")D",
-                color: "from-emerald-500 to-teal-600",
-                badge: "bg-emerald-100 text-emerald-700",
-                badgeText: "Compuerta 'O' (Sumadora)",
-                rule: "¡Flexible! La salida enciende (1) si AL MENOS UNA entrada está encendida (1).", 
-                analogy: "💡 **Luz de pasillo:** Puedes encender el foco presionando el interruptor A **O** el interruptor B.",
-                desc: "La salida solo permanece en 0 cuando todas sus entradas están apagadas.",
-                func: (a,b)=>a||b, 
-                tt: [[0,0,0], [0,1,1], [1,0,1], [1,1,1]] 
+                id: 'or', 
+                title: 'Tomo II: Compuerta OR', 
+                badge: 'Suma Lógica', 
+                symbol: ')D', 
+                color: 'from-emerald-600 to-teal-700', 
+                rule: 'La salida es 1 (Alto) si AL MENOS UNA de sus entradas está en 1 (Alto).', 
+                expression: 'S = A + B', 
+                intro: 'La compuerta OR representa la suma lógica. Es la encarnación del concepto de alternativa o redundancia. Si tienes múltiples vías para lograr un objetivo, la compuerta OR dice: "Mientras al menos una vía funcione o sea verdadera, el resultado general es un éxito". En lógica proposicional formal, se conoce como disyunción incluyente.', 
+                transistorDesc: 'En un circuito integrado moderno tipo CMOS, las compuertas OR se diseñan utilizando redes de transistores en paralelo. Al estar dispuestos en paralelo, basta con que un solo canal (transistor) se sature y se cierre para que la corriente eléctrica principal fluya y alcance el pin de salida, activando el circuito consecuente.', 
+                realWorld: 'Sistemas de alarma residenciales e industriales: la sirena general se dispara si se abre la puerta principal, O si se rompe la ventana, O si el detector térmico detecta fuego. Múltiples sensores paralelos desencadenan la misma reacción defensiva.',
+                botTip: '🤖 Pista: En electrónica, la suma lógica (OR) es como tener tuberías en paralelo. ¡El agua encontrará la salida si al menos una válvula está abierta!',
+                inputs: 2, func: (a,b) => a || b, tt: [[0,0,0], [0,1,1], [1,0,1], [1,1,1]] 
             },
             { 
-                name: "NOT", 
-                symbol: "▷○",
-                color: "from-red-500 to-rose-600",
-                badge: "bg-red-100 text-red-700",
-                badgeText: "Compuerta Inversora",
-                rule: "¡Contradictoria! Invierte totalmente la señal de entrada.", 
-                analogy: "🚨 **Freno de emergencia:** Mientras NO presiones el botón (0), el motor funciona (1). Si presionas el botón (1), el motor se apaga (0).",
-                desc: "Posee una sola entrada. Si entra 1 sale 0; si entra 0 sale 1.",
-                inputs: 1, 
-                func: (a)=>!a, 
-                tt: [[0,1], [1,0]] 
+                id: 'not', 
+                title: 'Tomo III: Compuerta NOT', 
+                badge: 'Inversor', 
+                symbol: '▷○', 
+                color: 'from-red-600 to-rose-700', 
+                rule: 'Invierte el estado: transforma 1 en 0 y 0 en 1.', 
+                expression: 'S = A\'', 
+                intro: 'La compuerta NOT es el pilar de la negación lógica o inversión, y a diferencia del resto, posee una sola entrada. Su función es rebotar el estado lógico al extremo opuesto absoluto: si entra verdad (1), sale falsedad (0), y viceversa. Es crucial para generar funciones complementarias, relojes de sincronización, y disparadores de memoria en la CPU.', 
+                transistorDesc: 'Constituye el circuito lógico semiconductor más básico y fundamental: se forma utilizando un solo transistor en configuración de emisor común o, más comúnmente hoy, un par de transistores complementarios (un NMOS y un PMOS) interconectados. Cuando recibe voltaje en su entrada, deriva la salida de inmediato a Tierra (0V).', 
+                realWorld: 'Automatización ambiental básica: las luces de los faros de un automóvil automático o las luces de la calle se encienden precisamente cuando NO hay luz solar. También el aviso luminoso de un refrigerador se activa cuando la puerta NO está cerrada.',
+                botTip: '🤖 Dato clave: El símbolo de NOT suele representarse con una pequeña burbuja en la salida. ¡Esa burbuja significa inversión en cualquier diagrama!',
+                inputs: 1, func: (a) => !a, tt: [[0,1], [1,0]] 
             },
             { 
-                name: "NAND", 
-                symbol: "D○",
-                color: "from-purple-500 to-violet-600",
-                badge: "bg-purple-100 text-purple-700",
-                badgeText: "Compuerta AND Invertida",
-                rule: "La salida siempre está encendida (1), EXCEPTO cuando todas sus entradas son 1.", 
-                analogy: "🔔 **Alarma de museo:** La alarma suena constantemente (1). Solo se apaga (0) cuando los 2 guardias meten sus llaves (1 y 1) simultáneamente.",
-                desc: "Es el resultado de conectar una compuerta AND seguida de una NOT.",
-                func: (a,b)=>!(a&&b), 
-                tt: [[0,0,1], [0,1,1], [1,0,1], [1,1,0]] 
+                id: 'nand', 
+                title: 'Tomo IV: Compuerta NAND', 
+                badge: 'Universal', 
+                symbol: 'D○', 
+                color: 'from-purple-600 to-violet-700', 
+                rule: 'La salida es 0 solo cuando TODAS las entradas son 1.', 
+                expression: 'S = (A · B)\'', 
+                intro: 'La compuerta NAND (NOT-AND) es considerada el Santo Grial del diseño digital porque es una "Compuerta Universal". Asombrosamente, puedes construir procesadores enteros y ordenadores utilizando EXCLUSIVAMENTE compuertas NAND. Funciona entregando una señal activa constantemente, a menos que todas sus entradas intenten ser 1.', 
+                transistorDesc: 'A nivel de diseño físico en silicio (VLSI), una compuerta NAND pura es mucho más simple, rápida y barata de fabricar que una compuerta AND. Por ello, la industria de semiconductores suele reducir algoritmos lógicos complejos a largas expresiones NAND equivalentes mediante las Leyes de De Morgan para ahorrar área física en los chips.', 
+                realWorld: 'Toda la arquitectura de almacenamiento moderno. La memoria Flash de los teléfonos inteligentes, Unidades de Estado Sólido (SSD) y pendrives USB está construida apilando tridimensionalmente miles de millones de diminutas compuertas NAND.',
+                botTip: '🤖 El Teorema de De Morgan nos dice que NAND equivale a tener entradas negadas entrando a una OR. ¡Es la reina indiscutible de la optimización!',
+                inputs: 2, func: (a,b) => !(a && b), tt: [[0,0,1], [0,1,1], [1,0,1], [1,1,0]] 
             },
             { 
-                name: "NOR", 
-                symbol: ")○",
-                color: "from-amber-500 to-orange-600",
-                badge: "bg-amber-100 text-amber-700",
-                badgeText: "Compuerta OR Invertida",
-                rule: "La salida enciende (1) ÚNICAMENTE cuando todas sus entradas están apagadas (0).", 
-                analogy: "🛡️ **Sistema de silencio:** Hay silencio en la sala (1) solo cuando NO hay movimiento en el pasillo A (0) NI en el pasillo B (0).",
-                desc: "Es el resultado de conectar una compuerta OR seguida de una NOT.",
-                func: (a,b)=>!(a||b), 
-                tt: [[0,0,1], [0,1,0], [1,0,0], [1,1,0]] 
+                id: 'nor', 
+                title: 'Tomo V: Compuerta NOR', 
+                badge: 'Universal', 
+                symbol: ')○', 
+                color: 'from-amber-600 to-orange-700', 
+                rule: 'La salida es 1 ÚNICAMENTE si TODAS sus entradas están apagadas (0).', 
+                expression: 'S = (A + B)\'', 
+                intro: 'La compuerta NOR (NOT-OR) es la hermana directa de NAND y constituye la segunda "Compuerta Universal" matemática. Es la máxima expresión del rechazo estricto: la salida será afirmativa (1) única y exclusivamente cuando todas sus señales de entrada estén en silencio absoluto (0). Cualquier interferencia manda la salida a cero.', 
+                transistorDesc: 'Al igual que la NAND, las estructuras NOR puras son altamente eficientes en el nivel de transistor físico. Históricamente, en la tecnología RTL (Resistor-Transistor Logic), que propulsó las misiones de la NASA en los años 60, las computadoras de vuelo basaron su inteligencia lógica nativa en circuitos NOR monolíticos.', 
+                realWorld: 'Sistemas de seguridad pasiva o de monitoreo crítico en maquinaria pesada: una prensa hidráulica descenderá SOLO SI el sensor de emergencia es 0, Y el de obstrucción óptica es 0, Y la puerta de mantenimiento temporal es 0.',
+                botTip: '🤖 Dato histórico: La famosa computadora del Apolo que llevó al hombre a la luna (AGC) basó su cerebro de navegación casi exclusivamente en compuertas NOR.',
+                inputs: 2, func: (a,b) => !(a || b), tt: [[0,0,1], [0,1,0], [1,0,0], [1,1,0]] 
             },
             { 
-                name: "XOR", 
-                symbol: "))D",
-                color: "from-cyan-500 to-blue-600",
-                badge: "bg-cyan-100 text-cyan-700",
-                badgeText: "OR Exclusiva (Diferentes)",
-                rule: "La salida enciende (1) SOLO si sus entradas son DIFERENTES entre sí.", 
-                analogy: "🎛️ **Interruptor de escalera conmutado:** Cambiar la posición de un interruptor invierte el estado de la luz respecto al otro.",
-                desc: "Si ambas entradas son iguales (0 y 0, o 1 y 1), la salida se apaga (0).",
-                func: (a,b)=>a!==b, 
-                tt: [[0,0,0], [0,1,1], [1,0,1], [1,1,0]] 
+                id: 'xor', 
+                title: 'Tomo VI: Compuerta XOR', 
+                badge: 'Exclusiva', 
+                symbol: '))D', 
+                color: 'from-teal-600 to-cyan-700', 
+                rule: 'La salida es 1 si las entradas son DIFERENTES entre sí.', 
+                expression: 'S = A ⊕ B', 
+                intro: 'La compuerta XOR (OR Exclusiva) actúa como un detector implacable de diferencias. Responde al concepto humano de "o lo uno, o lo otro, pero jamás ambos simultáneamente". Es el bloque maestro fundamental para la criptografía cibernética moderna y el corazón matemático indiscutible de la aritmética binaria.', 
+                transistorDesc: 'No es una compuerta atómica nativa; internamente es un circuito combinacional avanzado ensamblado interconectando transistores dispuestos como compuertas AND, OR y NOT en un solo microchip. Su creación consume más nanómetros de silicio, lo que la hace un circuito "pesado", pero sumamente valioso.', 
+                realWorld: 'El núcleo central de las Unidades Aritmético-Lógicas (ALU) de los procesadores Intel y AMD: las XOR calculan las sumas numéricas bit a bit. Además, se aplican en interruptores de conmutación de escalera (dos botones independientes controlan la misma lámpara).',
+                botTip: '🤖 Ciberseguridad: XOR es ultra-usado para cifrar archivos. ¡Si aplicas XOR dos veces seguidas con una clave secreta a un dato, recuperas el archivo original mágico!',
+                inputs: 2, func: (a,b) => a !== b, tt: [[0,0,0], [0,1,1], [1,0,1], [1,1,0]] 
             },
             { 
-                name: "XNOR", 
-                symbol: "))○",
-                color: "from-pink-500 to-rose-600",
-                badge: "bg-pink-100 text-pink-700",
-                badgeText: "Compuerta de Igualdad",
-                rule: "La salida enciende (1) SOLO si sus entradas son EXACTAMENTE IGUALES.", 
-                analogy: "🎯 **Comparador de coincidencia:** Da señal positiva (1) si ambos jugadores eligen la misma opción (0 y 0, o 1 y 1).",
-                desc: "Es la inversa de la compuerta XOR.",
-                func: (a,b)=>a===b, 
-                tt: [[0,0,1], [0,1,0], [1,0,0], [1,1,1]] 
+                id: 'xnor', 
+                title: 'Tomo VII: Compuerta XNOR', 
+                badge: 'Igualdad', 
+                symbol: '))○', 
+                color: 'from-pink-600 to-rose-700', 
+                rule: 'La salida es 1 si las entradas son EXACTAMENTE IGUALES.', 
+                expression: 'S = (A ⊕ B)\'', 
+                intro: 'La compuerta XNOR se define funcionalmente como el Detector de Equivalencia Biológica. Emitirá un pulso eléctrico verdadero (1) solo cuando logre confirmar una coincidencia perfecta y simétrica entre sus variables de entrada (ambas 1, o ambas 0). Es la inversa reflexiva de la compuerta XOR.', 
+                transistorDesc: 'Se sintetiza comúnmente fabricando un arreglo XOR base y acoplando una etapa final inversora (NOT). Su objetivo técnico principal es actuar en bloques integrados mayores conocidos como "Comparadores de Magnitud Digital", que dictaminan de manera instantánea si dos datos binarios son idénticos.', 
+                realWorld: 'Termostatos digitales de ultra-precisión automotriz y comparadores de contraseñas por hardware puro que exigen paridad de bits exacta. También se emplea en telecomunicaciones para sistemas de verificación de integridad y corrección de errores (Paridad Par) en datos enviados por internet.',
+                botTip: '🤖 Analítica: XNOR funciona literalmente como un comparador biométrico digital. ¿La entrada A es idéntica a la entrada B? ¡Si es así, XNOR da luz verde (1)!',
+                inputs: 2, func: (a,b) => a === b, tt: [[0,0,1], [0,1,0], [1,0,0], [1,1,1]] 
             }
         ];
 
-        function renderTheory() {
-            const container = document.getElementById('theory-container');
-            container.innerHTML = gates.map((gate, i) => `
-                <div class="bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden flex flex-col hover:shadow-xl transition-all duration-300">
-                    <!-- Cabecera de la Tarjeta -->
-                    <div class="bg-gradient-to-r ${gate.color} text-white p-5 flex justify-between items-center">
-                        <div>
-                            <span class="text-xs font-bold uppercase tracking-wider bg-white/20 px-3 py-1 rounded-full text-white">Compuerta</span>
-                            <h3 class="text-2xl font-black title-font mt-1">${gate.name}</h3>
+        let selectedTomeIdx = 0;
+        let tomeSimStates = tomesData.map(() => ({ a: 0, b: 0 }));
+
+        function renderTomesSidebar() {
+            const container = document.getElementById('tomes-sidebar');
+            container.innerHTML = tomesData.map((tome, idx) => `
+                <button onclick="selectTome(${idx})" class="w-full text-left p-4 rounded-2xl border transition duration-200 flex items-center justify-between ${idx === selectedTomeIdx ? 'bg-indigo-50 border-indigo-400 shadow-md transform scale-[1.02]' : 'bg-white border-slate-200 hover:bg-slate-50'}">
+                    <div><span class="text-[10px] font-black uppercase text-indigo-500 tracking-wider">${tome.badge}</span><h4 class="text-sm font-black text-slate-800 mt-1">${tome.title}</h4></div>
+                    <span class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center font-black text-base text-slate-700 border border-slate-200">${tome.symbol}</span>
+                </button>`).join('');
+        }
+
+        function selectTome(idx) { selectedTomeIdx = idx; renderTomesSidebar(); renderTomeContent(); }
+
+        function renderTomeContent() {
+            const tome = tomesData[selectedTomeIdx];
+            const state = tomeSimStates[selectedTomeIdx];
+            const outVal = tome.func(state.a === 1, state.b === 1) ? 1 : 0;
+            
+            document.getElementById('tome-content-container').innerHTML = `
+                <div class="max-w-4xl mx-auto space-y-8 pb-10">
+                    <div class="bg-gradient-to-r ${tome.color} text-white p-8 rounded-3xl shadow-xl flex justify-between items-center relative overflow-hidden">
+                        <div class="z-10 relative">
+                            <span class="bg-white/20 px-4 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wide shadow-sm backdrop-blur-sm">${tome.badge}</span>
+                            <h1 class="text-3xl md:text-5xl font-black mt-4 mb-2 title-font">${tome.title}</h1>
+                            <code class="text-yellow-300 bg-black/30 px-3 py-1.5 rounded-lg text-sm font-mono tracking-wider inline-block">${tome.expression}</code>
                         </div>
-                        <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-xl font-extrabold shadow-inner">
-                            ${gate.symbol}
+                        <div class="text-7xl font-black shadow-inner bg-white/20 p-6 rounded-3xl hidden sm:block z-10 relative border border-white/30 backdrop-blur-md">${tome.symbol}</div>
+                        <!-- Decors -->
+                        <div class="absolute -right-10 -top-10 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
+                        <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-black/10 rounded-full blur-2xl pointer-events-none"></div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Tarjeta Lógica -->
+                        <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200 flex flex-col hover:shadow-md transition">
+                            <h3 class="font-extrabold text-xl flex items-center gap-3 mb-4 text-slate-800"><i class="fa-solid fa-atom text-indigo-500"></i>Marco Lógico</h3>
+                            <p class="text-sm text-slate-600 font-semibold mb-6 leading-relaxed flex-1">${tome.intro}</p>
+                            <div class="bg-indigo-50 p-4 rounded-2xl text-sm font-bold text-indigo-900 border border-indigo-200 shadow-inner">
+                                <span class="uppercase tracking-widest text-[10px] block mb-1 text-indigo-500">Regla de Oro</span>
+                                📌 ${tome.rule}
+                            </div>
+                        </div>
+                        
+                        <!-- Tarjeta Industria y Mundo Real -->
+                        <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200 flex flex-col hover:shadow-md transition">
+                            <h3 class="font-extrabold text-xl flex items-center gap-3 mb-4 text-slate-800"><i class="fa-solid fa-microchip text-purple-500"></i>Arquitectura de Silicio</h3>
+                            <p class="text-sm text-slate-600 font-semibold mb-6 leading-relaxed flex-1">${tome.transistorDesc}</p>
+                            <div class="mt-auto pt-5 border-t border-slate-100">
+                                <h4 class="text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2"><i class="fa-solid fa-earth-americas text-emerald-500"></i> Implementación en el Mundo Real</h4>
+                                <p class="text-sm font-bold text-slate-700 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">${tome.realWorld}</p>
+                            </div>
                         </div>
                     </div>
-
-                    <!-- Contenido Explicativo -->
-                    <div class="p-6 flex-1 flex flex-col space-y-4">
-                        <span class="inline-block ${gate.badge} font-extrabold text-xs px-3 py-1 rounded-lg w-fit">
-                            ${gate.badgeText}
-                        </span>
-
-                        <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
-                            <p class="text-xs font-black text-slate-400 uppercase tracking-wide mb-1">📌 Regla de Oro:</p>
-                            <p class="text-sm font-bold text-slate-800">${gate.rule}</p>
-                        </div>
-
-                        <div class="bg-amber-50 p-3.5 rounded-2xl border border-amber-200/60">
-                            <p class="text-xs font-black text-amber-700 uppercase tracking-wide mb-1">💡 Ejemplo de la Vida Real:</p>
-                            <p class="text-xs font-semibold text-slate-700 leading-relaxed">${gate.analogy}</p>
-                        </div>
-
-                        <!-- Tabla de Verdad Dinámica -->
-                        <div>
-                            <h4 class="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">Tabla de verdad:</h4>
-                            <table class="truth-table w-full text-xs rounded-xl overflow-hidden shadow-sm">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200">
+                            <h3 class="font-extrabold text-xl mb-5 text-slate-800">Tabla de Verdad</h3>
+                            <table class="truth-table w-full text-sm rounded-xl overflow-hidden border border-slate-200 shadow-sm">
                                 <thead>
                                     <tr>
-                                        <th>Entrada A</th>
-                                        ${gate.inputs !== 1 ? `<th>Entrada B</th>` : ''}
-                                        <th class="bg-indigo-100 text-indigo-900">Salida (S)</th>
+                                        <th class="py-3 px-4">Entrada A</th>
+                                        ${tome.inputs!==1?'<th class="py-3 px-4">Entrada B</th>':''}
+                                        <th class="py-3 px-4 bg-indigo-100 text-indigo-900 font-black">Salida (S)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    ${gate.tt.map(row => `
-                                        <tr>
-                                            <td class="font-bold">${row[0]}</td>
-                                            ${gate.inputs !== 1 ? `<td class="font-bold">${row[1]}</td>` : ''}
-                                            <td class="result ${ (gate.inputs!==1 ? row[2] : row[1]) === 1 ? 'text-emerald-600 bg-emerald-50' : 'text-slate-400' }">
-                                                ${gate.inputs !== 1 ? row[2] : row[1]}
-                                            </td>
-                                        </tr>
-                                    `).join('')}
+                                    ${tome.tt.map(r=>`
+                                    <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+                                        <td class="py-3 font-bold text-slate-600">${r[0]}</td>
+                                        ${tome.inputs!==1?`<td class="py-3 font-bold text-slate-600">${r[1]}</td>`:''} 
+                                        <td class="py-3 result ${(tome.inputs!==1?r[2]:r[1])===1?'text-emerald-600 bg-emerald-50/50 text-xl':'text-slate-400'}">${tome.inputs!==1?r[2]:r[1]}</td>
+                                    </tr>`).join('')}
                                 </tbody>
                             </table>
                         </div>
-
-                        <!-- Mini Simulador Interactivo Integrado -->
-                        <div class="mt-auto pt-4 border-t border-slate-100 bg-gradient-to-r from-slate-50 to-indigo-50/30 p-4 rounded-2xl">
-                            <div class="flex justify-between items-center mb-3">
-                                <h4 class="text-xs font-black text-indigo-900 uppercase tracking-wide flex items-center gap-1">
-                                    <i class="fa-solid fa-gamepad text-indigo-500"></i> Simulación en Vivo
-                                </h4>
-                                <span class="text-[10px] font-bold text-slate-500 bg-white px-2 py-0.5 rounded-full border">Haz clic en los botones</span>
-                            </div>
-
-                            <div class="flex items-center justify-around bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
-                                <!-- Interruptores de Entrada -->
-                                <div class="flex flex-col gap-2">
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-xs font-black text-slate-500">A</span>
-                                        <button id="sim-btn-a-${i}" onclick="toggleSim(${i}, 'a')" class="w-11 h-6 bg-slate-300 rounded-full relative transition duration-300 ease-in-out shadow-inner">
-                                            <div class="w-5 h-5 bg-white rounded-full absolute top-0.5 left-0.5 transition-transform duration-300 shadow-md"></div>
-                                        </button>
-                                    </div>
-                                    ${gate.inputs !== 1 ? `
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-xs font-black text-slate-500">B</span>
-                                        <button id="sim-btn-b-${i}" onclick="toggleSim(${i}, 'b')" class="w-11 h-6 bg-slate-300 rounded-full relative transition duration-300 ease-in-out shadow-inner">
-                                            <div class="w-5 h-5 bg-white rounded-full absolute top-0.5 left-0.5 transition-transform duration-300 shadow-md"></div>
-                                        </button>
-                                    </div>` : ''}
+                        
+                        <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                            <h3 class="font-extrabold text-xl mb-5 text-slate-800 flex justify-between items-center">
+                                <span>Simulador Vivo</span>
+                                <span class="text-[10px] bg-amber-100 text-amber-700 px-3 py-1 rounded-full uppercase tracking-widest font-black shadow-sm">Interactivo</span>
+                            </h3>
+                            <div class="flex items-center justify-around bg-slate-50 p-6 rounded-2xl border border-slate-200 h-40 shadow-inner">
+                                <div class="flex flex-col gap-5">
+                                    <button onclick="toggleTomeSim('a')" class="w-16 h-8 ${state.a?'bg-indigo-600':'bg-slate-300'} rounded-full relative transition duration-300 shadow-inner hover:scale-105">
+                                        <div class="w-7 h-7 bg-white rounded-full absolute top-0.5 ${state.a?'translate-x-8 left-0.5':'left-0.5'} transition-transform duration-300 shadow"></div>
+                                    </button>
+                                    ${tome.inputs!==1 ? `
+                                    <button onclick="toggleTomeSim('b')" class="w-16 h-8 ${state.b?'bg-indigo-600':'bg-slate-300'} rounded-full relative transition duration-300 shadow-inner hover:scale-105">
+                                        <div class="w-7 h-7 bg-white rounded-full absolute top-0.5 ${state.b?'translate-x-8 left-0.5':'left-0.5'} transition-transform duration-300 shadow"></div>
+                                    </button>` : ''}
                                 </div>
-
-                                <div class="text-slate-300 text-xl font-black">➔</div>
-
-                                <!-- LED de Salida -->
+                                <div class="text-4xl font-black text-slate-300">➔</div>
                                 <div class="flex flex-col items-center">
-                                    <div id="sim-led-${i}" class="w-9 h-9 rounded-full bg-slate-200 border-2 border-slate-300 shadow-inner transition duration-300 flex items-center justify-center">
-                                        <i class="fa-solid fa-lightbulb text-slate-400 text-xs"></i>
+                                    <div class="w-20 h-20 rounded-full flex items-center justify-center border-4 transition-all duration-300 ${outVal?'bg-yellow-400 border-yellow-200 shadow-[0_0_35px_#facc15] scale-110':'bg-slate-200 border-slate-300'}">
+                                        <i class="fa-solid fa-lightbulb ${outVal?'text-white':'text-slate-400'} text-4xl drop-shadow-md"></i>
                                     </div>
-                                    <span id="sim-out-${i}" class="text-xs font-black mt-1 text-slate-700">Estado: 0</span>
+                                    <span class="text-xs font-black mt-3 ${outVal?'text-amber-600':'text-slate-400 uppercase tracking-widest'}">ESTADO: ${outVal}</span>
                                 </div>
                             </div>
                         </div>
-
                     </div>
-                </div>
-            `).join('');
-            gates.forEach((_, i) => updateSimUI(i));
-        }
-        
-        let simStates = gates.map(() => ({ a: 0, b: 0 }));
-        
-        function toggleSim(index, pin) {
-            simStates[index][pin] = simStates[index][pin] ? 0 : 1;
-            updateSimUI(index);
+                </div>`;
         }
 
-        function updateSimUI(index) {
-            const state = simStates[index];
-            const gate = gates[index];
-            const btnA = document.getElementById(`sim-btn-a-${index}`);
-            if (btnA) {
-                btnA.classList.toggle('bg-slate-300', !state.a);
-                btnA.classList.toggle('bg-indigo-600', !!state.a);
-                btnA.children[0].classList.toggle('translate-x-5', !!state.a);
-            }
-            if (gate.inputs !== 1) {
-                const btnB = document.getElementById(`sim-btn-b-${index}`);
-                if (btnB) {
-                    btnB.classList.toggle('bg-slate-300', !state.b);
-                    btnB.classList.toggle('bg-indigo-600', !!state.b);
-                    btnB.children[0].classList.toggle('translate-x-5', !!state.b);
-                }
-            }
-            const out = gate.func(state.a === 1, state.b === 1);
-            const led = document.getElementById(`sim-led-${index}`);
-            const outText = document.getElementById(`sim-out-${index}`);
-            outText.innerText = out ? 'Estado: 1 (Alto)' : 'Estado: 0 (Bajo)';
-            outText.className = out ? 'text-xs font-extrabold mt-1 text-amber-600' : 'text-xs font-black mt-1 text-slate-400';
-            
-            if (out) {
-                led.className = "w-9 h-9 rounded-full bg-yellow-400 border-2 border-yellow-200 shadow-[0_0_15px_#facc15] transition duration-300 flex items-center justify-center";
-                led.children[0].className = "fa-solid fa-lightbulb text-white text-base";
-            } else {
-                led.className = "w-9 h-9 rounded-full bg-slate-200 border-2 border-slate-300 transition duration-300 flex items-center justify-center";
-                led.children[0].className = "fa-solid fa-lightbulb text-slate-400 text-xs";
-            }
-        }
+        function toggleTomeSim(pin) { tomeSimStates[selectedTomeIdx][pin] = tomeSimStates[selectedTomeIdx][pin] ? 0 : 1; renderTomeContent(); }
 
-        // --- 2. DESAFÍO TU MENTE ---
+        // --- 2. DESAFÍO TU MENTE (RETOS 1-18 Y TUTORIAL) ---
         const logicChallenges = [
-            // Nivel 1
-            { title: "La Caja Fuerte Simple", desc: "CASO: Una pequeña caja fuerte requiere girar la Llave A y la Llave B al mismo tiempo para abrir.\nOBJETIVO: Diseña el circuito que encienda el LED solo cuando ambos switches están activos.", mat: "• 1 Batería\n• 2 Switches\n• 1 Compuerta AND\n• 1 LED" },
-            { title: "Luz de Pasillo Simple", desc: "CASO: Tienes un pasillo corto con un interruptor al inicio y otro al final. Si presionas cualquiera de los dos, la luz debe encender.\nOBJETIVO: Enciende el LED activando cualquier switch.", mat: "• 1 Batería\n• 2 Switches\n• 1 Compuerta OR\n• 1 LED" },
-            { title: "El Inversor", desc: "CASO: Un motor debe estar encendido por defecto. Si se presiona el botón de 'Freno', el motor debe apagarse.\nOBJETIVO: El LED debe estar encendido si el switch está en 0, y apagarse si está en 1.", mat: "• 1 Batería\n• 1 Switch\n• 1 Compuerta NOT\n• 1 LED" },
-            
-            // Nivel 2
-            { title: "Control de Tanques", desc: "CASO: En una fábrica de alimentos, se debe activar una alarma SOLO SI un tanque está lleno y el otro vacío. Si ambos están llenos o ambos vacíos, no suena.\nOBJETIVO: Activa el LED solo cuando los switches sean diferentes (0-1 o 1-0).", mat: "• 1 Batería\n• 2 Switches\n• 1 Compuerta XOR\n• 1 LED" },
-            { title: "Luz de Seguridad", desc: "CASO: Una luz láser debe encenderse SOLO si NO hay movimiento en el pasillo A ni en el pasillo B.\nOBJETIVO: El LED enciende si ambos switches están en 0.", mat: "• 1 Batería\n• 2 Switches\n• 1 Compuerta NOR\n• 1 LED" },
-            { title: "Sistema Inverso", desc: "CASO: La alarma de un museo suena constantemente. La única forma de apagarla es que los dos guardias usen su tarjeta simultáneamente.\nOBJETIVO: El LED se apaga solo cuando ambos switches son 1.", mat: "• 1 Batería\n• 2 Switches\n• 1 Compuerta NAND\n• 1 LED" },
-            
-            // Nivel 3
-            { title: "Ventilación Inteligente", desc: "CASO: El ventilador enciende si la Temperatura es alta (A) O la Humedad es alta (B), PERO solo si el Interruptor principal (C) está encendido.\nOBJETIVO: Usa 3 switches para controlar el LED según las condiciones.", mat: "• 1 Batería\n• 3 Switches\n• 1 Compuerta OR\n• 1 Compuerta AND\n• 1 LED" },
-            { title: "Alarma de Puertas", desc: "CASO: La alarma suena si se abre la Puerta 1 O la Puerta 2, Y el Sistema de Noche está activado.\nOBJETIVO: Combina OR y AND para proteger las dos puertas.", mat: "• 1 Batería\n• 3 Switches\n• 1 Compuerta OR\n• 1 Compuerta AND\n• 1 LED" },
-            { title: "Sistema de Riego", desc: "CASO: El riego inicia si (Tanque lleno Y Tierra seca) O si (Se presiona el botón Manual).\nOBJETIVO: Diseña el circuito combinando AND y OR.", mat: "• 1 Batería\n• 3 Switches\n• 1 Compuerta AND\n• 1 Compuerta OR\n• 1 LED" },
-
-            // Nivel 4
-            { title: "Caja Fuerte Avanzada", desc: "CASO: Abre la caja si usas la Llave X O la Llave Y, pero la alarma de bloqueo (Z) NO debe estar activa al mismo tiempo que las llaves.\nOBJETIVO: Abre la puerta condicionando el bloqueo.", mat: "• 1 Batería\n• 3 Switches\n• 1 Compuerta OR\n• 1 Compuerta NAND\n• 1 LED" },
-            { title: "Control de Acceso", desc: "CASO: El acceso se permite si el Carnet A O el Carnet B son válidos, pero NO si se presiona el botón de pánico de recepción.\nOBJETIVO: Combina la lógica OR y la restricción NAND.", mat: "• 1 Batería\n• 3 Switches\n• 1 Compuerta OR\n• 1 Compuerta NAND\n• 1 LED" },
-            { title: "Alarma de Fuego", desc: "CASO: La alarma suena por Humo O Calor, Y el botón de silenciar NO debe estar pulsado simultáneamente.\nOBJETIVO: Enciende el LED de alerta considerando el silenciador.", mat: "• 1 Batería\n• 3 Switches\n• 1 Compuerta OR\n• 1 Compuerta NAND\n• 1 LED" },
-
-            // Nivel 5
-            { title: "Advertencia Cinturón", desc: "CASO: La luz del cinturón enciende si el Motor está encendido (E) Y (El Piloto NO tiene cinturón (C) O el Pasajero NO tiene cinturón (P)).\nOBJETIVO: Diseña la advertencia de seguridad del auto.", mat: "• 1 Batería\n• 3 Switches\n• Compuertas NOT, AND, OR\n• 1 LED" },
-            { title: "Luces Automáticas", desc: "CASO: Los faros del auto encienden automáticamente si el Motor está encendido Y NO es de día (sensor de luz).\nOBJETIVO: Controla los faros con un inversor y una AND.", mat: "• 1 Batería\n• 2 Switches\n• 1 NOT, 1 AND\n• 1 LED" },
-            { title: "Sistema de Aire Acondicionado", desc: "CASO: El Aire Acondicionado enciende si (Temperatura alta) Y NOT (Ventana abierta).\nOBJETIVO: Evita el desperdicio de energía si hay ventanas abiertas.", mat: "• 1 Batería\n• 2 Switches\n• 1 NOT, 1 AND\n• 1 LED" },
-
-            // Nivel 6
-            { title: "Bóveda del Banco", desc: "CASO: Acceso a la bóveda solo si (Llave 1 Y Llave 2). La alarma suena si hay Movimiento O si se usa una Llave Falsa.\nOBJETIVO: Usa 2 LEDs. Uno para la puerta (AND) y otro para la alarma (OR).", mat: "• 1 Batería\n• 4 Switches\n• Múltiples Compuertas\n• 2 LEDs" },
-            { title: "Exclusa de Seguridad", desc: "CASO: En un laboratorio hay 2 puertas. Por presión de aire, SOLO UNA puerta puede estar abierta (XOR). Si ambas abren, suena una alarma.\nOBJETIVO: Control de exclusa estricto.", mat: "• 1 Batería\n• 2 Switches\n• Compuerta XOR / AND\n• 1 LED" },
-            { title: "Fábrica Automatizada", desc: "CASO: La cinta transportadora avanza si (Motor ON Y NOT Obstrucción). Una luz de alerta enciende si hay (Obstrucción Y Máquina encendida).\nOBJETIVO: Doble circuito de control.", mat: "• 1 Batería\n• 2 Switches\n• Compuertas NOT, AND\n• 2 LEDs" }
+            { title: "Nivel 0: Tutorial Interactivo", desc: "Aprende a conectar y usar componentes.", mat: "• 1 Batería (5V)\n• 1 Switch\n• 1 LED", isTutorial: true },
+            { title: "La Caja Fuerte Simple", desc: "Llave A y Llave B a la vez.", mat: "• 1 Batería\n• 2 Switches\n• 1 AND\n• 1 LED" },
+            { title: "Luz de Pasillo Simple", desc: "Cualquier botón enciende la luz.", mat: "• 1 Batería\n• 2 Switches\n• 1 OR\n• 1 LED" },
+            { title: "El Inversor", desc: "Motor encendido, frena si presionas.", mat: "• 1 Batería\n• 1 Switch\n• 1 NOT\n• 1 LED" },
+            { title: "Control de Tanques", desc: "Alarma si los tanques están diferentes.", mat: "• 1 Batería\n• 2 Switches\n• 1 XOR\n• 1 LED" },
+            { title: "Luz de Seguridad", desc: "Encendido solo si no hay movimiento en ninguno.", mat: "• 1 Batería\n• 2 Switches\n• 1 NOR\n• 1 LED" },
+            { title: "Sistema Inverso", desc: "Se apaga solo si ambos insertan tarjeta.", mat: "• 1 Batería\n• 2 Switches\n• 1 NAND\n• 1 LED" },
+            { title: "Ventilación Inteligente", desc: "Control de humedad y main.", mat: "• 1 Batería\n• 3 Switches\n• 1 OR, 1 AND\n• 1 LED" },
+            { title: "Alarma de Puertas", desc: "Suena si abren P1 o P2, y es de noche.", mat: "• 1 Batería\n• 3 Switches\n• 1 OR, 1 AND\n• 1 LED" },
+            { title: "Sistema de Riego", desc: "Combina sensores.", mat: "• 1 Batería\n• 3 Switches\n• 1 AND, 1 OR\n• 1 LED" },
+            { title: "Caja Fuerte Avanzada", desc: "Combinación OR y NAND.", mat: "• 1 Batería\n• 3 Switches\n• 1 OR, 1 NAND\n• 1 LED" },
+            { title: "Control de Acceso", desc: "Accesos válidos menos pánico.", mat: "• 1 Batería\n• 3 Switches\n• 1 OR, 1 NAND\n• 1 LED" },
+            { title: "Alarma de Fuego", desc: "Humo/Calor y silenciador.", mat: "• 1 Batería\n• 3 Switches\n• 1 OR, 1 NAND\n• 1 LED" },
+            { title: "Advertencia Cinturón", desc: "Lógica mixta not/and/or.", mat: "• 1 Batería\n• 3 Switches\n• NOT, AND, OR\n• 1 LED" },
+            { title: "Luces Automáticas", desc: "Inversor y AND.", mat: "• 1 Batería\n• 2 Switches\n• NOT, AND\n• 1 LED" },
+            { title: "Aire Acondicionado", desc: "Corte por ventana.", mat: "• 1 Batería\n• 2 Switches\n• NOT, AND\n• 1 LED" },
+            { title: "Bóveda del Banco", desc: "Control doble de LEDs.", mat: "• 1 Batería\n• 4 Switches\n• AND, OR\n• 2 LEDs" },
+            { title: "Exclusa de Seguridad", desc: "Lógica estricta.", mat: "• 1 Batería\n• 2 Switches\n• XOR, AND\n• 1 LED" },
+            { title: "Fábrica Automatizada", desc: "Doble sistema.", mat: "• 1 Batería\n• 2 Switches\n• NOT, AND\n• 2 LEDs" }
         ];
 
-        let cNodes = [];
-        let cWires = [];
-        let dragCNode = null;
-        let startPort = null;
-        let mouseX = 0, mouseY = 0;
-        let cIdCount = 0;
+        let cNodes = [], cWires = [], dragCNode = null, startPort = null, mouseX = 0, mouseY = 0, cIdCount = 0, currentChallengeIdx = 0;
 
         function addChallengeNode(type) {
-            const id = `cnode_${cIdCount++}`;
-            cNodes.push({ id, type, x: 150 + Math.random()*50, y: 100 + Math.random()*50, state: 0, in1:0, in2:0 });
-            drawCNodes();
+            cNodes.push({ id: `cnode_${cIdCount++}`, type, x: 120 + Math.random()*40, y: 100 + Math.random()*40, state: 0, in1:0, in2:0 });
+            drawCNodes(); evaluateCLogic();
+            if(currentChallengeIdx === 0) updateTutorialState();
         }
         
-        function clearChallengeCanvas() { cNodes = []; cWires = []; drawCNodes(); drawCWires(); }
+        function clearChallengeCanvas() { cNodes = []; cWires = []; drawCNodes(); drawCWires(); if(currentChallengeIdx === 0) updateTutorialState(); }
 
         function drawCNodes() {
-            const container = document.getElementById('nodes-container');
-            container.innerHTML = cNodes.map(n => {
+            document.getElementById('nodes-container').innerHTML = cNodes.map(n => {
                 let content = '', ports = '';
-                if(n.type === 'BATTERY') {
-                    content = '<span class="text-2xl mr-2">🔋</span><span class="font-extrabold text-slate-700">5V</span>';
-                    ports = `<div class="port out" onmousedown="startCWire(event, '${n.id}', 'out')"></div>`;
-                } else if(n.type === 'SWITCH') {
-                    content = `<button onmousedown="event.stopPropagation(); toggleCNode('${n.id}')" class="w-11 h-6 rounded-full relative transition ${n.state?'bg-emerald-500':'bg-slate-300'}"><div class="w-5 h-5 bg-white rounded-full absolute top-0.5 transition ${n.state?'translate-x-5 left-0.5':'left-0.5'}"></div></button>`;
-                    ports = `<div class="port in-single" onmousedown="startCWire(event, '${n.id}', 'in1')"></div><div class="port out" onmousedown="startCWire(event, '${n.id}', 'out')"></div>`;
-                } else if(n.type === 'LED') {
-                    content = `<div class="w-9 h-9 rounded-full border-2 transition ${n.state?'bg-yellow-400 border-yellow-200 shadow-[0_0_18px_#facc15]':'bg-slate-200 border-slate-400'}"></div>`;
-                    ports = `<div class="port in-single" onmousedown="startCWire(event, '${n.id}', 'in1')"></div>`;
-                } else if(n.type === 'NOT') {
-                    content = `<span class="font-black text-red-600">NOT</span>`;
-                    ports = `<div class="port in-single" onmousedown="startCWire(event, '${n.id}', 'in1')"></div><div class="port out" onmousedown="startCWire(event, '${n.id}', 'out')"></div>`;
-                } else {
-                    let cColor = 'blue';
-                    if(n.type === 'OR') cColor = 'emerald';
-                    if(n.type === 'NAND') cColor = 'purple';
-                    if(n.type === 'NOR') cColor = 'orange';
-                    if(n.type === 'XOR') cColor = 'teal';
-                    if(n.type === 'XNOR') cColor = 'pink';
-                    
-                    content = `<span class="font-black text-${cColor}-600">${n.type}</span>`;
-                    ports = `<div class="port in1" onmousedown="startCWire(event, '${n.id}', 'in1')"></div><div class="port in2" onmousedown="startCWire(event, '${n.id}', 'in2')"></div><div class="port out" onmousedown="startCWire(event, '${n.id}', 'out')"></div>`;
-                }
+                if(n.type === 'BATTERY') { content = '<span class="text-2xl mr-2">🔋</span><span class="font-extrabold text-slate-700">5V</span>'; ports = `<div class="port out" onmousedown="startCWire(event, '${n.id}', 'out')"></div>`; }
+                else if(n.type === 'SWITCH') { content = `<button onmousedown="event.stopPropagation(); toggleCNode('${n.id}')" class="w-11 h-6 rounded-full relative transition ${n.state?'bg-emerald-500':'bg-slate-300'}"><div class="w-5 h-5 bg-white rounded-full absolute top-0.5 transition ${n.state?'translate-x-5 left-0.5':'left-0.5'}"></div></button>`; ports = `<div class="port in-single" onmousedown="startCWire(event, '${n.id}', 'in1')"></div><div class="port out" onmousedown="startCWire(event, '${n.id}', 'out')"></div>`; }
+                else if(n.type === 'LED') { content = `<div class="w-9 h-9 rounded-full border-2 transition ${n.state?'bg-yellow-400 border-yellow-200 shadow-[0_0_18px_#facc15]':'bg-slate-200 border-slate-400'}"></div>`; ports = `<div class="port in-single" onmousedown="startCWire(event, '${n.id}', 'in1')"></div>`; }
+                else if(n.type === 'NOT') { content = `<span class="font-black text-red-600">NOT</span>`; ports = `<div class="port in-single" onmousedown="startCWire(event, '${n.id}', 'in1')"></div><div class="port out" onmousedown="startCWire(event, '${n.id}', 'out')"></div>`; }
+                else { let colors = {'OR':'emerald','NAND':'purple','NOR':'orange','XOR':'teal','XNOR':'pink'}; content = `<span class="font-black text-${colors[n.type]||'blue'}-600">${n.type}</span>`; ports = `<div class="port in1" onmousedown="startCWire(event, '${n.id}', 'in1')"></div><div class="port in2" onmousedown="startCWire(event, '${n.id}', 'in2')"></div><div class="port out" onmousedown="startCWire(event, '${n.id}', 'out')"></div>`; }
                 return `<div id="${n.id}" class="node" style="left:${n.x}px; top:${n.y}px" onmousedown="startDragCNode(event, '${n.id}')">${content}${ports}</div>`;
             }).join('');
         }
 
-        function toggleCNode(id) {
-            let n = cNodes.find(x => x.id === id);
-            if(n) { n.state = n.state ? 0 : 1; evaluateCLogic(); }
-        }
-
+        function toggleCNode(id) { let n = cNodes.find(x => x.id === id); if(n) { n.state = n.state ? 0 : 1; evaluateCLogic(); if(currentChallengeIdx === 0) updateTutorialState(); } }
         function startDragCNode(e, id) { dragCNode = cNodes.find(n => n.id === id); }
-        
-        function startCWire(e, nodeId, portType) {
-            e.stopPropagation();
-            startPort = { nodeId, portType, x: e.clientX, y: e.clientY };
-        }
+        function startCWire(e, nodeId, portType) { e.stopPropagation(); startPort = { nodeId, portType, x: e.clientX, y: e.clientY }; }
 
         document.getElementById('node-canvas').addEventListener('mousemove', (e) => {
-            const rect = document.getElementById('node-canvas').getBoundingClientRect();
-            mouseX = e.clientX - rect.left;
-            mouseY = e.clientY - rect.top;
+            const rect = document.getElementById('node-canvas').getBoundingClientRect(); mouseX = e.clientX - rect.left; mouseY = e.clientY - rect.top;
             if(dragCNode) { dragCNode.x += e.movementX; dragCNode.y += e.movementY; drawCNodes(); drawCWires(); }
             if(startPort) drawCWires();
         });
@@ -607,13 +691,10 @@
         document.getElementById('node-canvas').addEventListener('mouseup', (e) => {
             if(startPort) {
                 if(e.target.classList.contains('port')) {
-                    let tNode = e.target.parentElement.id;
-                    let tPort = e.target.classList.contains('in1') || e.target.classList.contains('in-single') ? 'in1' : (e.target.classList.contains('in2') ? 'in2' : 'out');
+                    let tNode = e.target.parentElement.id, tPort = e.target.classList.contains('in1') || e.target.classList.contains('in-single') ? 'in1' : (e.target.classList.contains('in2') ? 'in2' : 'out');
                     if(startPort.nodeId !== tNode && startPort.portType !== tPort) {
-                        let f = startPort.portType === 'out' ? startPort : {nodeId: tNode, portType: tPort};
-                        let t = startPort.portType === 'out' ? {nodeId: tNode, portType: tPort} : startPort;
-                        cWires.push({ fromNode: f.nodeId, toNode: t.nodeId, toPort: t.portType });
-                        evaluateCLogic();
+                        let f = startPort.portType === 'out' ? startPort : {nodeId: tNode, portType: tPort}, t = startPort.portType === 'out' ? {nodeId: tNode, portType: tPort} : startPort;
+                        cWires.push({ fromNode: f.nodeId, toNode: t.nodeId, toPort: t.portType }); evaluateCLogic(); if(currentChallengeIdx === 0) updateTutorialState();
                     }
                 }
                 startPort = null; drawCWires();
@@ -622,294 +703,147 @@
         });
 
         function getCPortCoords(nodeId, type) {
-            const el = document.getElementById(nodeId);
-            if(!el) return {x:0, y:0};
-            const r = el.getBoundingClientRect();
-            const cr = document.getElementById('node-canvas').getBoundingClientRect();
+            const el = document.getElementById(nodeId); if(!el) return {x:0, y:0};
+            const r = el.getBoundingClientRect(), cr = document.getElementById('node-canvas').getBoundingClientRect();
             let x = r.left - cr.left, y = r.top - cr.top;
-            if(type === 'out') { x += r.width; y += r.height/2; }
-            else if(type === 'in1' || type === 'in-single') { y += type==='in-single'? r.height/2 : r.height*0.25; }
-            else if(type === 'in2') { y += r.height*0.75; }
+            if(type === 'out') { x += r.width; y += r.height/2; } else if(type === 'in1' || type === 'in-single') { y += type==='in-single'? r.height/2 : r.height*0.25; } else if(type === 'in2') { y += r.height*0.75; }
             return {x, y};
         }
 
         function drawCWires() {
-            const svg = document.getElementById('wires-layer');
-            let html = '';
-            cWires.forEach(w => {
-                let p1 = getCPortCoords(w.fromNode, 'out');
-                let p2 = getCPortCoords(w.toNode, w.toPort);
-                html += `<path class="wire" d="M ${p1.x} ${p1.y} C ${p1.x+50} ${p1.y}, ${p2.x-50} ${p2.y}, ${p2.x} ${p2.y}"></path>`;
-            });
-            if(startPort) {
-                let p1 = getCPortCoords(startPort.nodeId, startPort.portType);
-                html += `<path class="wire stroke-indigo-400" d="M ${p1.x} ${p1.y} L ${mouseX} ${mouseY}"></path>`;
-            }
+            const svg = document.getElementById('wires-layer'); let html = '';
+            cWires.forEach(w => { let p1 = getCPortCoords(w.fromNode, 'out'), p2 = getCPortCoords(w.toNode, w.toPort); html += `<path class="wire" d="M ${p1.x} ${p1.y} C ${p1.x+50} ${p1.y}, ${p2.x-50} ${p2.y}, ${p2.x} ${p2.y}"></path>`; });
+            if(startPort) { let p1 = getCPortCoords(startPort.nodeId, startPort.portType); html += `<path class="wire stroke-indigo-400" d="M ${p1.x} ${p1.y} L ${mouseX} ${mouseY}"></path>`; }
             svg.innerHTML = html;
         }
 
         function evaluateCLogic() {
             cNodes.forEach(n => { n.in1 = 0; n.in2 = 0; if(n.type!=='SWITCH') n.state = 0; });
             for(let i=0; i<4; i++) {
-                cWires.forEach(w => {
-                    let s = cNodes.find(n => n.id === w.fromNode);
-                    let t = cNodes.find(n => n.id === w.toNode);
-                    if(s && t) {
-                        let val = s.type === 'BATTERY' ? 1 : s.state;
-                        if(w.toPort === 'in1') t.in1 = val;
-                        if(w.toPort === 'in2') t.in2 = val;
-                    }
-                });
+                cWires.forEach(w => { let s = cNodes.find(n => n.id === w.fromNode), t = cNodes.find(n => n.id === w.toNode); if(s && t) { let val = s.type === 'BATTERY' ? 1 : s.state; if(w.toPort === 'in1') t.in1 = val; if(w.toPort === 'in2') t.in2 = val; } });
                 cNodes.forEach(n => {
-                    if(n.type === 'SWITCH') n.state = n.in1 ? n.state : 0;
-                    else if(n.type === 'AND') n.state = (n.in1 && n.in2) ? 1 : 0;
-                    else if(n.type === 'OR') n.state = (n.in1 || n.in2) ? 1 : 0;
-                    else if(n.type === 'NOT') n.state = (!n.in1) ? 1 : 0;
-                    else if(n.type === 'NAND') n.state = !(n.in1 && n.in2) ? 1 : 0;
-                    else if(n.type === 'NOR') n.state = !(n.in1 || n.in2) ? 1 : 0;
-                    else if(n.type === 'XOR') n.state = (n.in1 !== n.in2) ? 1 : 0;
-                    else if(n.type === 'XNOR') n.state = (n.in1 === n.in2) ? 1 : 0;
-                    else if(n.type === 'LED') n.state = n.in1;
+                    if(n.type === 'SWITCH') n.state = n.in1 ? n.state : 0; else if(n.type === 'AND') n.state = (n.in1 && n.in2) ? 1 : 0; else if(n.type === 'OR') n.state = (n.in1 || n.in2) ? 1 : 0; else if(n.type === 'NOT') n.state = (!n.in1) ? 1 : 0; else if(n.type === 'NAND') n.state = !(n.in1 && n.in2) ? 1 : 0; else if(n.type === 'NOR') n.state = !(n.in1 || n.in2) ? 1 : 0; else if(n.type === 'XOR') n.state = (n.in1 !== n.in2) ? 1 : 0; else if(n.type === 'XNOR') n.state = (n.in1 === n.in2) ? 1 : 0; else if(n.type === 'LED') n.state = n.in1;
                 });
             }
             drawCNodes();
         }
 
-        let currentChallengeIdx = 0;
+        function updateTutorialState() {
+            const tooltip = document.getElementById('tutorial-tooltip'), text = document.getElementById('tooltip-text');
+            if(currentChallengeIdx !== 0) return tooltip.classList.add('hidden');
+            const bat = cNodes.find(n => n.type === 'BATTERY'), sw = cNodes.find(n => n.type === 'SWITCH'), led = cNodes.find(n => n.type === 'LED');
+            if(!bat) return positionTooltip('btn-tool-bat', '1. ¡Hola! Haz clic en "Batería" para agregar la fuente de energía.');
+            if(!sw) return positionTooltip('btn-tool-sw', '2. Excelente. Ahora haz clic en "Switch" para agregar un interruptor.');
+            if(!led) return positionTooltip('btn-tool-led', '3. Perfecto. Haz clic en "LED" para agregar la bombilla.');
+            if(!cWires.find(w => w.fromNode === bat.id && w.toNode === sw.id)) return positionTooltip(bat.id, '4. Arrastra desde el puerto azul de la Batería al puerto del Switch.');
+            if(!cWires.find(w => w.fromNode === sw.id && w.toNode === led.id)) return positionTooltip(sw.id, '5. Ahora conecta la salida del Switch hacia la entrada del LED.');
+            if(sw.state === 0) return positionTooltip(sw.id, '6. ¡Genial! Haz clic en el botón del Switch para activarlo (encenderlo).');
+            positionTooltip('verify-challenge-btn', '7. ¡El LED encendió! Presiona "Verificar" para completar el Tutorial.');
+        }
+
+        function positionTooltip(elId, txt) {
+            const tt = document.getElementById('tutorial-tooltip'), tgt = document.getElementById(elId);
+            if(!tgt) return;
+            const r = tgt.getBoundingClientRect(), cr = document.getElementById('node-canvas').getBoundingClientRect();
+            document.getElementById('tooltip-text').innerText = txt; tt.classList.remove('hidden');
+            let t = r.top - cr.top - 60, l = r.left - cr.left + (r.width / 2) - 120;
+            if(t < 10) { t = r.bottom - cr.top + 15; tt.classList.replace('arrow-bottom', 'arrow-top'); } else { tt.classList.replace('arrow-top', 'arrow-bottom'); }
+            tt.style.top = `${t}px`; tt.style.left = `${Math.max(10, Math.min(l, cr.width - 250))}px`;
+        }
+
         function renderChallengeSidebar() {
-            const sidebar = document.getElementById('levels-sidebar');
-            let html = '';
+            let html = '<div class="mb-4"><h3 class="text-xs font-black text-slate-400 mb-2 uppercase tracking-wider">Tutorial Inicial</h3>';
+            let c0 = localStorage.getItem('reto_lv_0') === 'true';
+            html += `<div onclick="selectChallenge(0)" class="p-3 mb-2 rounded-xl border ${currentChallengeIdx === 0 ? 'bg-indigo-50 border-indigo-300 shadow-sm' : 'bg-white hover:bg-slate-50 transition'} cursor-pointer flex justify-between items-center"><div><span class="text-[10px] font-black text-indigo-500 uppercase">Aprende los controles</span><h4 class="text-xs font-extrabold text-slate-800">Nivel 0</h4></div>${c0 ? '<i class="fa-solid fa-circle-check text-emerald-500 text-lg"></i>' : '<i class="fa-solid fa-circle-play text-indigo-500 text-lg"></i>'}</div></div>`;
+
+            let compCount = c0 ? 1 : 0;
             for(let l=1; l<=6; l++) {
                 html += `<div class="mb-4"><h3 class="text-xs font-black text-slate-400 mb-2 uppercase tracking-wider">Nivel ${l}</h3>`;
                 for(let c=1; c<=3; c++) {
-                    let idx = ((l-1)*3) + (c-1);
-                    if(idx >= logicChallenges.length) break;
-                    let unlocked = idx === 0 || localStorage.getItem(`reto_lv_${idx-1}`) === 'true';
-                    let completed = localStorage.getItem(`reto_lv_${idx}`) === 'true';
-                    let icon = completed ? '<i class="fa-solid fa-circle-check text-emerald-500 text-base"></i>' : (unlocked ? '<i class="fa-regular fa-circle text-indigo-400"></i>' : '<i class="fa-solid fa-lock text-slate-300"></i>');
-                    let bg = completed ? 'bg-emerald-50 border-emerald-200' : (unlocked ? 'bg-white border-indigo-100 cursor-pointer hover:shadow-md' : 'bg-slate-50 border-slate-100 opacity-60');
-                    html += `<div onclick="${unlocked ? `selectChallenge(${idx})` : ''}" class="p-3 mb-2 rounded-xl border ${bg} flex justify-between items-center transition"><span class="text-xs font-extrabold ${unlocked ? 'text-slate-700' : 'text-slate-400'}">Reto ${c}</span>${icon}</div>`;
+                    let idx = ((l-1)*3) + c; if(idx >= logicChallenges.length) break;
+                    let u = idx === 1 || localStorage.getItem(`reto_lv_${idx-1}`) === 'true', cmp = localStorage.getItem(`reto_lv_${idx}`) === 'true';
+                    if(cmp) compCount++;
+                    let i = cmp ? '<i class="fa-solid fa-circle-check text-emerald-500 text-base"></i>' : (u ? '<i class="fa-regular fa-circle text-indigo-400"></i>' : '<i class="fa-solid fa-lock text-slate-300"></i>');
+                    let bg = currentChallengeIdx === idx ? 'bg-indigo-50 border-indigo-300 shadow-sm' : (cmp ? 'bg-emerald-50/60 border-emerald-200' : (u ? 'bg-white border-indigo-100 hover:shadow-md cursor-pointer' : 'bg-slate-50 opacity-60'));
+                    html += `<div onclick="${u ? `selectChallenge(${idx})` : ''}" class="p-3 mb-2 rounded-xl border ${bg} flex justify-between items-center transition"><span class="text-xs font-extrabold ${u ? 'text-slate-700' : 'text-slate-400'}">Reto ${c}</span>${i}</div>`;
                 }
                 html += `</div>`;
             }
-            sidebar.innerHTML = html;
+            document.getElementById('levels-sidebar').innerHTML = html;
+            document.getElementById('dash-retos').innerText = `${compCount}/${logicChallenges.length}`;
         }
 
         function selectChallenge(idx) {
-            currentChallengeIdx = idx;
-            const chall = logicChallenges[idx];
-            document.getElementById('current-challenge-title').innerText = `L${Math.floor(idx/3)+1} - ${chall.title}`;
-            document.getElementById('current-challenge-desc').innerText = chall.desc;
-            document.getElementById('current-materials').innerText = chall.mat;
-            clearChallengeCanvas(); 
-            renderChallengeSidebar();
+            currentChallengeIdx = idx; const ch = logicChallenges[idx];
+            document.getElementById('current-challenge-title').innerText = ch.title; document.getElementById('current-challenge-desc').innerText = ch.desc; document.getElementById('current-materials').innerText = ch.mat;
+            clearChallengeCanvas(); renderChallengeSidebar();
         }
 
         function runChallengeSimulation() {
             evaluateCLogic();
-            let leds = cNodes.filter(n => n.type === 'LED');
-
-            if(leds.length === 0) {
-                alert("Debes colocar al menos un LED para ver el resultado.");
-                return;
-            }
-
-            if(leds.some(l => l.state === 1)) {
-                alert("🎉 ¡Excelente trabajo! El LED encendió correctamente. ¡Has superado el reto!");
+            if(cNodes.filter(n => n.type === 'LED').length === 0) return showToast("Agrega al menos un LED para completar el circuito.", "error");
+            if(cNodes.filter(n => n.type === 'LED').some(l => l.state === 1)) {
+                if(localStorage.getItem(`reto_lv_${currentChallengeIdx}`) !== 'true') addXP(50);
                 localStorage.setItem(`reto_lv_${currentChallengeIdx}`, 'true');
-                if(currentChallengeIdx < logicChallenges.length - 1) {
-                    localStorage.setItem(`reto_lv_${currentChallengeIdx+1}`, 'unlocked');
-                }
-                renderChallengeSidebar();
-            } else {
-                alert("El LED está apagado. Revisa la lógica y tus conexiones.");
-            }
+                renderChallengeSidebar(); openBlocklyModal();
+            } else showToast("El LED está apagado. Revisa la lógica de tu circuito.", "error");
         }
 
-        // --- 3. LABORATORIO VIRTUAL ---
+        function openBlocklyModal() {
+            const m = document.getElementById('blockly-modal');
+            document.getElementById('modal-title').innerText = currentChallengeIdx === 0 ? "¡Tutorial Completado!" : `¡Reto Superado!`;
+            m.classList.remove('hidden');
+        }
+        function closeBlocklyModal() { document.getElementById('blockly-modal').classList.add('hidden'); }
+        function nextChallengeFromModal() { closeBlocklyModal(); if(currentChallengeIdx < logicChallenges.length - 1) selectChallenge(currentChallengeIdx + 1); }
+
+        // --- 4. LABORATORIO VIRTUAL ---
         function toggleAccordion(id) { document.getElementById(id).classList.toggle('active'); }
-
         function initVirtualLab() {
-            const canvas = document.getElementById('dark-lab-canvas');
-            const workspace = document.getElementById('dark-lab-workspace');
-            const items = document.querySelectorAll('.draggable-lab-item');
-            
-            let idCounter = 0;
-            let selectedElement = null;
-            let isDraggingWorkspace = false;
-            let activeDragElement = null;
-            let offsetX, offsetY;
-
-            const compNames = { 'bat': 'Pila 5V DC', 'led-r': 'LED Rojo', 'led-y': 'LED Amarillo', 'led-g': 'LED Verde', 'led-b': 'LED Azul', 'res': 'Resistencia 220 Ω', 'sw': 'Interruptor Switch' };
-
-            items.forEach(i => { i.addEventListener('dragstart', e => { e.dataTransfer.setData('type', e.target.dataset.type); }); });
+            const canvas = document.getElementById('dark-lab-canvas'), workspace = document.getElementById('dark-lab-workspace');
+            let idCounter = 0, selectedElement = null, isDragging = false, activeDrag = null, offsetX, offsetY;
+            document.querySelectorAll('.draggable-lab-item').forEach(i => i.addEventListener('dragstart', e => e.dataTransfer.setData('type', e.target.dataset.type)));
             workspace.addEventListener('dragover', e => e.preventDefault());
-            workspace.addEventListener('drop', e => {
-                e.preventDefault();
-                const type = e.dataTransfer.getData('type');
-                if(!type) return;
-                const wr = workspace.getBoundingClientRect();
-                createComponent(type, e.clientX - wr.left, e.clientY - wr.top);
-            });
-
+            workspace.addEventListener('drop', e => { e.preventDefault(); const t = e.dataTransfer.getData('type'); if(t) createComponent(t, e.clientX - workspace.getBoundingClientRect().left, e.clientY - workspace.getBoundingClientRect().top); });
             function createComponent(type, x, y) {
-                const el = document.createElement('div');
-                el.className = 'lab-comp'; el.id = `lab-c-${idCounter++}`; el.dataset.type = type;
+                const el = document.createElement('div'); el.className = 'lab-comp'; el.dataset.type = type;
                 let html = '';
-                if(type === 'bat') { html = `<div class="flex flex-col text-[10px] items-center text-gray-300 font-mono space-y-1"><div class="flex justify-between w-24 px-1"><span>+ 5v</span><span>- GND</span></div><div class="border border-[#345c43] bg-[#0c1e14] px-4 py-1 rounded">5V DC</div></div><div class="lab-comp-port red" style="left: 0; top: 50%; transform: translateY(-50%);"></div><div class="lab-comp-port blue" style="right: 0; top: 50%; transform: translateY(-50%);"></div>`; } 
-                else if(type.startsWith('led')) { const h = type.split('-')[1]==='r'?'#ef4444':(type.split('-')[1]==='y'?'#eab308':(type.split('-')[1]==='g'?'#22c55e':'#3b82f6')); html = `<div class="flex flex-col text-[10px] items-center text-gray-300 font-mono space-y-1"><div class="flex justify-between w-24 px-1"><span>Ánodo(+)</span><span>Cátodo(-)</span></div><div class="w-10 h-6 border border-dashed border-[#e2a862] flex items-center justify-center relative"><i class="fa-solid fa-caret-right text-2xl" style="color:${h};"></i><div class="absolute right-0 w-0.5 h-4 bg-gray-300"></div></div></div><div class="lab-comp-port red" style="left: -4px; top: 50%; transform: translateY(-50%);"></div><div class="lab-comp-port blue" style="right: -4px; top: 50%; transform: translateY(-50%);"></div>`; } 
-                else if (type === 'res') { html = `<div class="w-16 h-3 bg-orange-200 border border-orange-800 flex items-center relative"><div class="w-2 h-0.5 bg-gray-400 absolute -left-2"></div><div class="w-2 h-0.5 bg-gray-400 absolute -right-2"></div></div><div class="lab-comp-port blue" style="left: -10px; top: 50%; transform: translateY(-50%); border-color:gray;"></div><div class="lab-comp-port blue" style="right: -10px; top: 50%; transform: translateY(-50%); border-color:gray;"></div>`; } 
-                else if (type === 'sw') { html = `<div class="w-10 h-8 border border-gray-500 bg-[#1f2937] rounded flex items-center justify-center"><div class="w-6 h-3 bg-gray-700 border border-gray-900 rounded-sm"></div></div><div class="lab-comp-port blue" style="left: -4px; top: 50%; transform: translateY(-50%); border-color:gray;"></div><div class="lab-comp-port blue" style="right: -4px; top: 50%; transform: translateY(-50%); border-color:gray;"></div>`; }
-
-                el.innerHTML = html; canvas.appendChild(el);
-                const rect = el.getBoundingClientRect(); el.style.left = `${x - rect.width/2}px`; el.style.top = `${y - rect.height/2}px`;
-                el.addEventListener('mousedown', (e) => startDragWorkspace(e, el));
+                if(type === 'bat') html = `<div class="bg-gray-800 p-2 text-xs border border-green-500 rounded text-white">5V DC</div><div class="lab-comp-port red" style="left:-6px;"></div><div class="lab-comp-port blue" style="right:-6px;"></div>`;
+                else html = `<div class="bg-gray-700 p-2 text-xs rounded text-white">${type}</div>`;
+                el.innerHTML = html; canvas.appendChild(el); el.style.left = `${x}px`; el.style.top = `${y}px`;
+                el.addEventListener('mousedown', (e) => { if(e.target.classList.contains('lab-comp-port')) return; isDragging = true; activeDrag = el; offsetX = e.clientX - el.getBoundingClientRect().left; offsetY = e.clientY - el.getBoundingClientRect().top; });
             }
-
-            function startDragWorkspace(e, element) {
-                if(e.target.classList.contains('lab-comp-port')) return; 
-                isDraggingWorkspace = true; activeDragElement = element; selectComponent(element);
-                const rect = element.getBoundingClientRect(); const wr = workspace.getBoundingClientRect();
-                offsetX = e.clientX - rect.left; offsetY = e.clientY - rect.top;
-            }
-
-            workspace.addEventListener('mousemove', (e) => {
-                if(!isDraggingWorkspace || !activeDragElement) return;
-                const wr = workspace.getBoundingClientRect();
-                let newX = Math.round((e.clientX - wr.left - offsetX) / 20) * 20;
-                let newY = Math.round((e.clientY - wr.top - offsetY) / 20) * 20;
-                activeDragElement.style.left = `${newX}px`; activeDragElement.style.top = `${newY}px`;
-            });
-            workspace.addEventListener('mouseup', () => { isDraggingWorkspace = false; activeDragElement = null; });
-            workspace.addEventListener('mouseleave', () => { isDraggingWorkspace = false; activeDragElement = null; });
-
-            function selectComponent(element) {
-                if(selectedElement) selectedElement.classList.remove('selected');
-                selectedElement = element; selectedElement.classList.add('selected');
-                document.getElementById('prop-empty').classList.add('hidden'); document.getElementById('prop-content').classList.replace('hidden', 'flex');
-                const title = compNames[element.dataset.type] || "Componente";
-                document.getElementById('comp-name-display').innerText = title; document.getElementById('prop-title').innerText = title.split(' ')[0]; 
-            }
-
-            workspace.addEventListener('mousedown', (e) => {
-                if(e.target === workspace || e.target === canvas) {
-                    if(selectedElement) selectedElement.classList.remove('selected');
-                    selectedElement = null; document.getElementById('prop-empty').classList.remove('hidden');
-                    document.getElementById('prop-content').classList.replace('flex', 'hidden'); document.getElementById('prop-title').innerText = "Propiedades";
-                }
-            });
-            document.getElementById('btn-delete-comp').addEventListener('click', () => {
-                if(selectedElement) {
-                    selectedElement.remove(); selectedElement = null;
-                    document.getElementById('prop-empty').classList.remove('hidden'); document.getElementById('prop-content').classList.replace('flex', 'hidden');
-                    document.getElementById('prop-title').innerText = "Propiedades";
-                }
-            });
+            workspace.addEventListener('mousemove', e => { if(isDragging && activeDrag) { activeDrag.style.left = `${Math.round((e.clientX - workspace.getBoundingClientRect().left - offsetX)/20)*20}px`; activeDrag.style.top = `${Math.round((e.clientY - workspace.getBoundingClientRect().top - offsetY)/20)*20}px`; }});
+            workspace.addEventListener('mouseup', () => { isDragging = false; activeDrag = null; });
         }
 
-        // --- 4. EVALUACIÓN FINAL ---
+        // --- 5. EVALUACIÓN FINAL (QUIZ) ---
         const bank50 = [
-            {q: "¿Qué significan los valores 1 y 0 en circuitos digitales?", opts: ["Solo números para contar", "Encendido (1) y Apagado (0)", "Corriente alterna (1) y directa (0)", "Positivo y negativo"], a: 1},
-            {q: "¿Qué compuerta lógica da un 1 (encendido) SOLO si TODAS sus entradas son 1?", opts: ["OR", "NOT", "AND", "XOR"], a: 2},
-            {q: "¿Qué compuerta lógica da un 1 (encendido) si AL MENOS UNA de sus entradas es 1?", opts: ["AND", "OR", "NAND", "NOR"], a: 1},
-            {q: "¿Qué función cumple la compuerta NOT?", opts: ["Suma las entradas", "Mantiene la señal igual", "Multiplica", "Invierte la señal de entrada (de 1 a 0, y de 0 a 1)"], a: 3},
-            {q: "En una compuerta AND, si el Switch A está encendido (1) y el B apagado (0), la salida es:", opts: ["1", "0", "Fuego", "5V"], a: 1},
-            {q: "En una compuerta OR, si el Switch A está encendido (1) y el B apagado (0), la salida es:", opts: ["0", "1", "-1", "Cortocircuito"], a: 1},
-            {q: "Si envías un 0 a una compuerta NOT, ¿qué sale?", opts: ["0", "1", "Nada", "2"], a: 1},
-            {q: "¿Qué componente de nuestro tablero usamos para ver visualmente si hay un estado 1 (salida alta)?", opts: ["Batería", "Cable", "LED", "Resistencia"], a: 2},
-            {q: "¿Qué compuerta da como resultado 1 solo cuando sus dos entradas son DIFERENTES (ej. 1-0 o 0-1)?", opts: ["AND", "XOR", "OR", "NOT"], a: 1},
-            {q: "¿Cuántos estados de energía reconoce la lógica binaria básica?", opts: ["Infinitos", "Tres", "Dos (Encendido y Apagado)", "Diez"], a: 2},
-            {q: "Si una alarma suena cuando se abre la puerta (1) O se rompe la ventana (1), ¿qué compuerta la representa?", opts: ["AND", "OR", "NOT", "NAND"], a: 1},
-            {q: "Para abrir una caja fuerte debes meter la llave (1) Y teclear la clave (1). ¿Qué compuerta se usa?", opts: ["AND", "OR", "NOR", "XOR"], a: 0},
-            {q: "En nuestro simulador de tablero, ¿qué componente provee la energía (los 5V)?", opts: ["El LED", "La Compuerta", "La Batería", "El Switch"], a: 2},
-            {q: "Si conectas dos interruptores en serie (uno detrás del otro), actúan como una compuerta:", opts: ["AND", "OR", "NOT", "XOR"], a: 0},
-            {q: "Si conectas dos interruptores en paralelo (caminos separados), actúan como una compuerta:", opts: ["AND", "OR", "NOT", "XNOR"], a: 1},
-            {q: "Una compuerta NAND es básicamente una compuerta AND conectada a una compuerta...", opts: ["OR", "XOR", "NOT", "NOR"], a: 2},
-            {q: "Si las entradas de una compuerta NOR son 0 y 0, su salida es:", opts: ["0", "1", "Incierta", "Infinito"], a: 1},
-            {q: "Un motor debe funcionar siempre, EXCEPTO si presionas el botón de pánico. ¿Qué compuerta usas en el botón?", opts: ["AND", "OR", "NOT", "NAND"], a: 2},
-            {q: "Tienes 3 llaves. La puerta abre si giras CUALQUIERA de las 3. Esto es lógica:", opts: ["AND de 3 entradas", "OR de 3 entradas", "XOR de 3 entradas", "NOT"], a: 1},
-            {q: "El timbre de un bus suena si presionas el botón delantero O el trasero. ¿Qué compuerta es?", opts: ["OR", "AND", "NAND", "NOT"], a: 0},
-            {q: "Para lanzar un misil de juguete, ambos jugadores deben presionar su botón a la vez. ¿Lógica usada?", opts: ["OR", "NOT", "XOR", "AND"], a: 3},
-            {q: "La luz de un cuarto cambia al presionar el interruptor de la entrada o el de la cama. Ambos la pueden encender o apagar. ¿Compuerta ideal?", opts: ["AND", "OR", "XOR", "NOT"], a: 2},
-            {q: "¿Qué significa la palabra 'Combinacional' en electrónica digital?", opts: ["Que mezcla agua y electricidad", "Que la salida solo depende de la combinación actual de las entradas", "Que tiene memoria", "Que usa letras y números"], a: 1},
-            {q: "Si en un circuito, el LED nunca enciende sin importar cómo muevas los switches, podría ser que...", opts: ["El LED esté dañado o conectado al revés", "Esté usando una compuerta OR", "Tenga una batería de sobra", "Haya mucha luz"], a: 0},
-            {q: "Un sensor de luz de calle da 1 de día y 0 de noche. Si queremos que el foco encienda de noche, ¿qué agregamos?", opts: ["Una compuerta OR", "Un motor", "Una compuerta NOT", "Una resistencia más grande"], a: 2},
-            {q: "El refrigerador enciende la luz interna cuando abres la puerta. (Puerta Abierta = 1). ¿Necesitas lógica compleja para esto?", opts: ["Sí, un procesador", "No, con conectar el interruptor directo al foco es suficiente", "Sí, una compuerta AND", "Una XOR"], a: 1},
-            {q: "En electrónica, 'GND' (Tierra/Masa) usualmente representa el estado lógico:", opts: ["1", "0", "Ambos", "Ninguno"], a: 1},
-            {q: "En electrónica, 'VCC' (5 Voltios) usualmente representa el estado lógico:", opts: ["1", "0", "Negativo", "Alterno"], a: 0},
-            {q: "Si una compuerta tiene 2 entradas, ¿cuántas combinaciones posibles de 0s y 1s hay? (00, 01...)", opts: ["2", "3", "4", "8"], a: 2},
-            {q: "¿Qué compuerta te dice si las dos entradas son IGUALES (ej. 1-1 o 0-0)?", opts: ["XOR", "AND", "XNOR", "NOR"], a: 2},
-            {q: "Si una compuerta AND tiene entradas 1, 1 y 1, la salida es:", opts: ["0", "1", "3", "-1"], a: 1},
-            {q: "Si una compuerta OR tiene entradas 0, 0 y 1, la salida es:", opts: ["0", "1", "2", "No funciona"], a: 1},
-            {q: "Un ascensor solo se mueve si (Puerta Cerrada = 1) Y (Botón presionado = 1). Esto es:", opts: ["Lógica OR", "Lógica AND", "Lógica NOT", "Física Cuántica"], a: 1},
-            {q: "El ventilador enciende si hace calor O si se activa manualmente. Es una compuerta:", opts: ["OR", "AND", "XOR", "NAND"], a: 0},
-            {q: "¿Qué sucede si a un LED no le pones una resistencia en un circuito real?", opts: ["Brilla más bonito", "No enciende", "Puede quemarse por exceso de corriente", "Se convierte en un Switch"], a: 2},
-            {q: "Para probar si una compuerta AND funciona, ¿qué combinación debes enviarle para que el LED encienda?", opts: ["0, 0", "0, 1", "1, 0", "1, 1"], a: 3},
-            {q: "¿Qué compuerta es conocida como el bloque de 'Suma Lógica'?", opts: ["AND", "NOT", "OR", "XOR"], a: 2},
-            {q: "¿Qué compuerta es conocida como el bloque de 'Multiplicación Lógica'?", opts: ["OR", "AND", "NOT", "NOR"], a: 1},
-            {q: "Un horno microondas funciona si presionas 'Inicio' Y la puerta NO está abierta. Usa:", opts: ["Solo AND", "Solo OR", "AND y NOT", "NAND y OR"], a: 2},
-            {q: "Si una salida NAND es 0, eso significa con seguridad que sus entradas son:", opts: ["0, 0", "1, 0", "0, 1", "1, 1"], a: 3},
-            {q: "La alarma del auto suena si está 'Activada' (1) Y alguien abre la 'Puerta' (1).", opts: ["Lógica OR", "Lógica AND", "Lógica XOR", "Lógica XNOR"], a: 1},
-            {q: "¿Qué significa que un circuito es 'Digital'?", opts: ["Que se toca con los dedos", "Que funciona con valores discretos (0 y 1)", "Que tiene pantalla LED", "Que usa internet"], a: 1},
-            {q: "En una placa base de computadora, hay millones de interruptores minúsculos que forman estas compuertas. ¿Cómo se llaman?", opts: ["Transistores", "Tornillos", "Lámparas", "Cables"], a: 0},
-            {q: "Si tienes el circuito: A entra a un NOT, y su salida va a un LED. Si A=1, el LED:", opts: ["Enciende", "Apaga", "Parpadea", "Explota"], a: 1},
-            {q: "Para que una compuerta NOR de salida 1, ¿qué deben ser sus entradas?", opts: ["1 y 1", "1 y 0", "0 y 0", "Cualquiera"], a: 2},
-            {q: "La lógica binaria es el lenguaje base de:", opts: ["Solo las calculadoras", "Todos los dispositivos computacionales", "Los autos mecánicos", "Las bombillas antiguas"], a: 1},
-            {q: "¿Cómo se le llama a la tabla que muestra todas las combinaciones posibles de una compuerta?", opts: ["Tabla de Multiplicar", "Tabla de Verdad", "Tabla de Circuitos", "Tabla Binaria"], a: 1},
-            {q: "Si conectas un Switch directo a un LED en el simulador y presionas el Switch (1), el LED:", opts: ["Apaga", "Enciende", "Hace un corto", "No hace nada"], a: 1},
-            {q: "Un celular enciende su pantalla si tocas la pantalla O si presionas el botón lateral. Lógica:", opts: ["AND", "OR", "NOT", "XOR"], a: 1},
-            {q: "¡Felicidades, llegaste a la pregunta 50! En electrónica digital, 1+1 (Hablando de lógica OR) es igual a:", opts: ["2", "0", "1", "11"], a: 2}
+            {q: "¿Qué significan los valores 1 y 0 en circuitos digitales?", opts: ["Solo números", "Encendido(1) Apagado(0)", "Alterna(1)", "Ninguno"], a: 1},
+            {q: "Da 1 SOLO si TODAS las entradas son 1", opts: ["OR", "NOT", "AND", "XOR"], a: 2},
+            {q: "Da 1 si AL MENOS UNA entrada es 1", opts: ["AND", "OR", "NAND", "NOR"], a: 1},
+            {q: "¿Qué función cumple la compuerta NOT?", opts: ["Suma", "Mantiene", "Multiplica", "Invierte"], a: 3},
+            {q: "Compuerta AND con entradas 1 y 0, la salida es:", opts: ["1", "0", "Fuego", "5V"], a: 1},
+            {q: "Compuerta OR con entradas 1 y 0, la salida es:", opts: ["0", "1", "-1", "Corto"], a: 1},
+            {q: "¿Qué compuerta da 1 solo cuando sus dos entradas son DIFERENTES?", opts: ["AND", "XOR", "OR", "NOT"], a: 1},
+            {q: "¿Cuántos estados de energía reconoce la lógica binaria básica?", opts: ["Infinitos", "Tres", "Dos (1 y 0)", "Diez"], a: 2}
         ];
-
         let currentQuiz = [];
-        
         function startQuiz() {
-            document.getElementById('quiz-result').classList.add('hidden');
-            document.getElementById('btn-grade-quiz').classList.remove('hidden');
-            document.getElementById('btn-restart-quiz').classList.add('hidden');
-            
-            currentQuiz = [...bank50].sort(() => 0.5 - Math.random()).slice(0, 10);
-            
-            document.getElementById('quiz-container').innerHTML = currentQuiz.map((item, idx) => `
-                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
-                    <h3 class="font-extrabold text-base md:text-lg text-slate-800 mb-4">${idx + 1}. ${item.q}</h3>
-                    <div class="space-y-2">
-                        ${item.opts.map((opt, oIdx) => `
-                            <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-slate-200 hover:bg-indigo-50 hover:border-indigo-200 cursor-pointer transition">
-                                <input type="radio" name="q${idx}" value="${oIdx}" class="w-4 h-4 text-indigo-600 focus:ring-indigo-500">
-                                <span class="text-sm font-semibold text-slate-700">${opt}</span>
-                            </label>`).join('')}
-                    </div>
-                </div>`).join('');
+            document.getElementById('quiz-result').classList.add('hidden'); document.getElementById('btn-grade-quiz').classList.remove('hidden'); document.getElementById('btn-restart-quiz').classList.add('hidden');
+            currentQuiz = [...bank50].sort(() => 0.5 - Math.random()).slice(0, 5);
+            document.getElementById('quiz-container').innerHTML = currentQuiz.map((item, idx) => `<div class="bg-slate-50 p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm"><h3 class="font-extrabold text-lg mb-5 text-slate-800">${idx + 1}. ${item.q}</h3><div class="space-y-3">${item.opts.map((opt, oIdx) => `<label class="flex items-center space-x-4 p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:bg-indigo-50 hover:border-indigo-200 transition-all"><input type="radio" name="q${idx}" value="${oIdx}" class="w-5 h-5 text-indigo-600 focus:ring-indigo-500"><span class="font-bold text-slate-700">${opt}</span></label>`).join('')}</div></div>`).join('');
         }
-
         function gradeQuiz() {
-            let score = 0, answeredAll = true;
-            currentQuiz.forEach((item, idx) => {
-                const sel = document.querySelector(`input[name="q${idx}"]:checked`);
-                if(sel) { if(parseInt(sel.value) === item.a) score++; } else answeredAll = false;
-            });
-            if(!answeredAll) return alert("Por favor responde las 10 preguntas antes de calificar.");
-            
-            const res = document.getElementById('quiz-result');
-            res.classList.remove('hidden');
-            document.getElementById('btn-grade-quiz').classList.add('hidden');
-            document.getElementById('btn-restart-quiz').classList.remove('hidden');
-            
-            let pct = (score / 10) * 100;
-            res.innerHTML = `Obtuviste ${score} de 10 respuestas correctas (${pct}%).`;
-            res.className = `mt-8 p-6 rounded-2xl text-center font-black text-2xl border-2 ${pct>=60?'border-emerald-500 bg-emerald-50 text-emerald-800':'border-red-500 bg-red-50 text-red-800'}`;
+            let score = 0, all = true;
+            currentQuiz.forEach((item, idx) => { const sel = document.querySelector(`input[name="q${idx}"]:checked`); if(sel){ if(parseInt(sel.value)===item.a) score++; } else all = false; });
+            if(!all) return showToast("Por favor, responde todas las preguntas del examen.", "error");
+            addXP(score * 100);
+            const res = document.getElementById('quiz-result'); res.classList.remove('hidden'); document.getElementById('btn-grade-quiz').classList.add('hidden'); document.getElementById('btn-restart-quiz').classList.remove('hidden');
+            res.innerHTML = `Obtuviste ${score} de 5 correctas. <br><span class="text-xl">¡+${score*100} XP ganados!</span>`; res.className = `mt-8 p-8 rounded-3xl text-center font-black text-3xl border-4 ${score>=3?'border-emerald-500 bg-emerald-50 text-emerald-800':'border-red-500 bg-red-50 text-red-800'}`;
         }
 
-        // --- INICIALIZACIÓN GENERAL ---
-        window.onload = () => {
-            renderTheory();
-            renderChallengeSidebar();
-            selectChallenge(0);
-            initVirtualLab();
-            startQuiz();
-            switchTab('teoria'); 
-        };
+        window.onload = () => { renderTomesSidebar(); renderTomeContent(); renderChallengeSidebar(); selectChallenge(0); initVirtualLab(); startQuiz(); switchTab('teoria'); };
     </script>
 </body>
 </html>
