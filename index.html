@@ -456,6 +456,7 @@ input,select{user-select:text;-webkit-user-select:text}
             <button data-tab="desafio" onclick="switchTab('desafio')" class="mc-btn"><i class="fa-solid fa-gamepad"></i>Desafío</button>
             <button data-tab="laboratorio" onclick="switchTab('laboratorio')" class="mc-btn"><i class="fa-solid fa-flask"></i>Laboratorio</button>
             <button data-tab="evaluacion" onclick="switchTab('evaluacion')" class="mc-btn gold"><i class="fa-solid fa-star"></i>Evaluación</button>
+            <button data-tab="aventura" onclick="switchTab('aventura')" class="mc-btn green"><i class="fa-solid fa-person-running"></i>Aventura</button>
             <button data-tab="avance" onclick="switchTab('avance')" class="mc-btn"><i class="fa-solid fa-chart-line"></i>Mi avance</button>
         </nav>
         <div id="xpbox">
@@ -827,6 +828,55 @@ input,select{user-select:text;-webkit-user-select:text}
 </div>
 
 <!-- 5. MI AVANCE -->
+<!-- 6. AVENTURA -->
+<div id="tab-aventura" class="tab-content">
+  <div class="av-wrap">
+    <div id="av-select" class="av-scr">
+      <h2 class="av-h">🎮 Aventura Lógica · Elige tu personaje</h2>
+      <p class="av-p">Recorre 6 mundos, esquiva a los <b>Glitch</b> 🐛 y golpea los bloques <b>?</b> desde abajo: cada uno esconde un <b>reto de proyectos con compuertas</b>. ¡Resuelve los 5 de cada mundo para abrir la bandera!</p>
+      <div id="av-chars" class="av-chars"></div>
+    </div>
+    <div id="av-map" class="av-scr" style="display:none">
+      <div class="av-bar"><b id="av-who"></b><button class="av-btn" onclick="avShow('select')">🔄 Cambiar personaje</button></div>
+      <h2 class="av-h">🗺️ Mapa de mundos</h2>
+      <div id="av-levels" class="av-levels"></div>
+    </div>
+    <div id="av-play" class="av-scr" style="display:none">
+      <div class="av-bar"><b id="av-lname"></b><span id="av-hud"></span><button class="av-btn" onclick="avExit()">🗺️ Mapa</button></div>
+      <div class="av-stage"><canvas id="av-cv" width="640" height="360"></canvas>
+        <div id="av-modal" class="av-ov"></div><div id="av-end" class="av-ov"></div></div>
+      <div class="av-pad"><button id="av-bl">◀</button><button id="av-br">▶</button><span style="flex:1"></span><button id="av-bj">⤒ SALTAR</button></div>
+      <p class="av-p" style="text-align:center">Teclado: ← → o A D para moverte · ↑ W o Espacio para saltar · Golpea los bloques <b>?</b> desde abajo · Salta sobre los Glitch para vencerlos</p>
+    </div>
+  </div>
+</div>
+<style>
+#tab-aventura{overflow-y:auto;padding:12px;background:var(--bg)}@media(min-width:768px){#tab-aventura{padding:24px}}
+.av-wrap{max-width:60rem;margin:0 auto}.av-h{font-size:clamp(1.1rem,3vw,1.6rem);font-weight:800;color:#fff;margin-bottom:.4rem}
+.av-p{color:#aab4e0;font-size:.85rem;margin-bottom:.8rem}
+.av-chars{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr))}
+.av-ch{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:10px;text-align:center;cursor:pointer;color:var(--tx)}
+.av-ch:hover,.av-ch.on{border-color:#fde047;transform:translateY(-3px)}.av-ch canvas{image-rendering:pixelated;width:80px;height:112px}
+.av-ch b{display:block;color:#fff;font-size:1rem}.av-ch small{display:block;font-size:.72rem;color:#aab4e0;line-height:1.3}
+.av-bar{display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap;margin-bottom:8px;color:#fff}
+.av-btn{border:0;border-radius:10px;background:var(--vi);color:#fff;font-weight:700;padding:6px 12px;cursor:pointer}
+.av-levels{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,17rem),1fr))}
+.av-lv{border-radius:14px;padding:12px;color:#fff;text-align:left;border:2px solid #0006;cursor:pointer;position:relative}
+.av-lv.lock{filter:grayscale(1) brightness(.5);cursor:not-allowed}.av-lv b{font-size:1.05rem;display:block}.av-lv small{opacity:.9}
+.av-lv .n{position:absolute;right:10px;top:6px;font-size:2rem;font-weight:900;opacity:.35}
+.av-stage{position:relative;max-width:900px;margin:0 auto;border:3px solid #000;border-radius:8px;overflow:hidden;background:#000}
+#av-cv{width:100%;height:auto;display:block;image-rendering:pixelated}
+.av-ov{display:none;position:absolute;inset:0;background:rgba(5,8,25,.88);overflow-y:auto;padding:14px;color:#fff;align-items:center;justify-content:center}
+.av-ov.show{display:flex}.av-ov>div{max-width:34rem;width:100%}
+.av-q{font-size:1rem;line-height:1.45;margin:.4rem 0 .8rem}.av-tag{font-size:.7rem;font-weight:800;background:#fde047;color:#111;border-radius:6px;padding:1px 8px}
+.av-o{display:block;width:100%;text-align:left;margin:6px 0;border:2px solid #3b4690;background:#12183a;color:#fff;border-radius:10px;padding:8px 12px;cursor:pointer;font-size:.9rem}
+.av-o:hover:not(:disabled){border-color:#22d3ee}.av-o.ok{background:#14532d;border-color:#4ade80}.av-o.bad{background:#7f1d1d;border-color:#f87171;opacity:.7}
+.av-fb{margin-top:8px;font-size:.88rem;background:#1a1440;border:1px solid #5b4aa8;border-radius:10px;padding:8px 10px}
+.av-pad{display:flex;gap:10px;max-width:900px;margin:8px auto}.av-pad button{flex:0 0 auto;min-width:64px;height:54px;border:0;border-radius:12px;background:#1c2459;color:#fff;font-weight:800;font-size:1.1rem;touch-action:none;user-select:none}
+.av-pad button:active{background:var(--vi)}#av-bj{min-width:120px;background:#b45309}
+#av-hud{font-weight:700;font-size:.95rem}
+</style>
+
 <div id="tab-avance" class="tab-content"><div id="avance-body" style="max-width:72rem;margin:0 auto"></div></div>
 
 <!-- BARRA INFERIOR (hotbar) PARA CELULAR -->
@@ -835,6 +885,7 @@ input,select{user-select:text;-webkit-user-select:text}
     <button data-tab="desafio" onclick="switchTab('desafio')" class="hb-slot"><i class="fa-solid fa-gamepad"></i>RETOS</button>
     <button data-tab="laboratorio" onclick="switchTab('laboratorio')" class="hb-slot"><i class="fa-solid fa-flask"></i>LAB</button>
     <button data-tab="evaluacion" onclick="switchTab('evaluacion')" class="hb-slot" style="background:#d99a1c"><i class="fa-solid fa-star"></i>EXAMEN</button>
+    <button data-tab="aventura" onclick="switchTab('aventura')" class="hb-slot" style="background:#2f9d4f"><i class="fa-solid fa-person-running"></i>JUEGO</button>
     <button data-tab="avance" onclick="switchTab('avance')" class="hb-slot"><i class="fa-solid fa-chart-line"></i>AVANCE</button>
 </nav>
 
@@ -914,6 +965,8 @@ function switchTab(id) {
     document.getElementById('tab-' + id).classList.add('active');
     document.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === id));
     closeLabDrawers();
+    if (id !== 'aventura' && window.avLeave) avLeave();
+    if (id === 'aventura' && window.avEnter) avEnter();
     if (id === 'desafio') setTimeout(drawCWires, 30);
     if (id === 'avance' && cur) renderAvance();
 }
@@ -1917,6 +1970,213 @@ window.addEventListener('load', () => {
         $$('pf-read').innerHTML = `${ins} → <span style="color:${on(y)}">Y=${y}</span> ${y ? '💡 LED encendido' : '⚫ LED apagado'} <div style="font-weight:400;font-size:.75rem;color:#aab4e0">👆 Toca los recuadros punteados para mover los interruptores</div>`;
     }
     pfPick('AND');
+})();
+</script>
+
+<script>
+/* ===== AVENTURA LÓGICA: plataformas con retos de compuertas ===== */
+(function () {
+    const W = 640, H = 360, GY = 288, $ = id => document.getElementById(id);
+    const CHARS = [
+        { n:'Bit',  d:'Equilibrado y confiable.',            spd:3.2, jmp:12,   hp:3, dj:0, mg:0,  c:{ skin:'#f1c9a5', shirt:'#60a5fa', pants:'#1e3a8a', hat:'#2563eb', acc:'none' } },
+        { n:'Lola', d:'🦘 Salta muy alto.',                  spd:3.0, jmp:13.2, hp:3, dj:0, mg:0,  c:{ skin:'#f5d0b0', shirt:'#f472b6', pants:'#7e22ce', hat:'#ec4899', acc:'bow' } },
+        { n:'Nano', d:'💨 Corre más rápido.',                spd:3.9, jmp:11.6, hp:3, dj:0, mg:0,  c:{ skin:'#e8b98f', shirt:'#4ade80', pants:'#166534', hat:'#16a34a', acc:'goggles' } },
+        { n:'Volta',d:'⚡ Doble salto en el aire.',          spd:3.2, jmp:11.6, hp:3, dj:1, mg:0,  c:{ skin:'#f1c9a5', shirt:'#fde047', pants:'#a16207', hat:'#eab308', acc:'bolt' } },
+        { n:'Chip', d:'🔋 4 corazones de resistencia.',      spd:3.0, jmp:11.8, hp:4, dj:0, mg:0,  c:{ skin:'#cbd5e1', shirt:'#94a3b8', pants:'#334155', hat:'#64748b', acc:'antenna' } },
+        { n:'Zeta', d:'🧲 Atrae las monedas cercanas.',      spd:3.2, jmp:12,   hp:3, dj:0, mg:70, c:{ skin:'#d9a37c', shirt:'#fb923c', pants:'#9a3412', hat:'#f97316', acc:'crown' } }
+    ];
+    const THEMES = [
+        { n:'Prado Binario',       sky:['#7dd3fc','#e0f2fe'], g:'#4ade80', d:'#92400e', b:'#c2410c', hill:'#86efac', t:'Básico',      col:'#16a34a' },
+        { n:'Desierto Booleano',   sky:['#fcd34d','#fff7ed'], g:'#fbbf24', d:'#b45309', b:'#d97706', hill:'#fde68a', t:'Básico',      col:'#d97706' },
+        { n:'Cueva del Chip',      sky:['#1e1b4b','#4338ca'], g:'#a78bfa', d:'#312e81', b:'#6d28d9', hill:'#3730a3', t:'Intermedio',  col:'#7c3aed' },
+        { n:'Ciudad Neón',         sky:['#0f172a','#7e22ce'], g:'#22d3ee', d:'#1e293b', b:'#0e7490', hill:'#581c87', t:'Intermedio',  col:'#0891b2' },
+        { n:'Fábrica de Circuitos',sky:['#14532d','#065f46'], g:'#34d399', d:'#064e3b', b:'#047857', hill:'#047857', t:'Complejo',    col:'#059669' },
+        { n:'Castillo del Procesador',sky:['#450a0a','#7f1d1d'], g:'#f87171', d:'#451a03', b:'#991b1b', hill:'#7f1d1d', t:'Complejo',  col:'#dc2626' }
+    ];
+    // [pregunta, [opciones], índice correcto, explicación]
+    const Q = [[
+      ['🔔 Proyecto: un timbre que suena si pulsan el botón de la puerta de adelante O el de atrás. ¿Qué compuerta usas?',['AND','OR','NOT','XOR'],1,'La OR da 1 si al menos una entrada es 1.'],
+      ['🛠️ Una prensa de seguridad solo debe arrancar si pulsas los DOS botones a la vez. ¿Qué compuerta usas?',['OR','NAND','AND','NOR'],2,'La AND exige que todas las entradas sean 1.'],
+      ['🌙 Luz nocturna: el LED debe encender cuando el sensor de luz da 0 (oscuridad). ¿Qué compuerta usas?',['NOT','AND','OR','XNOR'],0,'La NOT invierte: 0 → 1.'],
+      ['🔌 En un chip de 14 patas (como el 74HC08), ¿qué pin va a +5 V (VCC)?',['Pin 7','Pin 1','Pin 14','Pin 8'],2,'VCC es el pin 14 y GND el pin 7.'],
+      ['💡 Montaje con 74HC08: A=1 y B=0. ¿Qué hace el LED de salida?',['Se enciende','Se apaga','Parpadea','Depende de la fuente'],1,'AND(1,0)=0, así que el LED queda apagado.']
+    ],[
+      ['🪜 Luz de escalera: dos interruptores, y cada uno cambia el estado de la luz. ¿Qué compuerta se comporta así?',['XOR','AND','NOR','OR'],0,'La XOR da 1 solo si las entradas son diferentes.'],
+      ['🧊 Alarma de nevera: el LED rojo está prendido siempre y solo se apaga cuando AMBOS sensores valen 1. ¿Compuerta?',['AND','NOR','NAND','XOR'],2,'NAND = AND invertida: da 0 solo si todas las entradas son 1.'],
+      ['🟢 Indicador «sala libre»: el LED verde enciende solo cuando NINGÚN sensor está activo. ¿Compuerta?',['OR','NOR','AND','XNOR'],1,'La NOR da 1 solo cuando todas sus entradas son 0.'],
+      ['🎯 Juego de coincidencias: el LED enciende si dos jugadores eligen el mismo valor (0-0 o 1-1). ¿Compuerta?',['XOR','NAND','XNOR','OR'],2,'La XNOR da 1 cuando las entradas son iguales.'],
+      ['🔴 En los montajes, ¿para qué sirve la resistencia de 470 Ω en serie con el LED?',['Para que brille más','Para limitar la corriente y no quemarlo','Para cambiar el 0 por 1','Para ahorrar pilas'],1,'Sin resistencia, el LED recibe demasiada corriente y se daña.']
+    ],[
+      ['⭐ La NAND se llama «universal» porque…',['Es la más rápida','Solo con NAND puedes construir cualquier otra compuerta','Solo tiene una entrada','No gasta energía'],1,'Con NAND se arman NOT, AND, OR y cualquier circuito.'],
+      ['🔧 No tienes un chip NOT, pero sí uno NAND. ¿Cómo haces un inversor?',['Dejando una entrada sin conectar','Uniendo las dos entradas de la NAND','Conectando la salida a GND','No se puede'],1,'NAND(A,A) = ¬A. ¡Es un NOT!'],
+      ['⚠️ Un pulsador con resistencia pull-down de 10 kΩ evita…',['Que el LED se queme','Que la entrada quede «flotante» y lea valores aleatorios','Que el chip se caliente','Que haya que usar VCC'],1,'La pull-down mantiene la entrada en 0 cuando el pulsador está suelto.'],
+      ['🏠 Alarma: suena si (puerta OR ventana) AND sistema armado. Puerta=0, ventana=1, armado=1. ¿Suena?',['Sí','No','Solo si puerta=1','Depende del chip'],0,'(0 OR 1)=1 y 1 AND 1 = 1 → suena.'],
+      ['🦺 Semáforo de seguridad: LED rojo = NAND(casco, cinturón). Casco=1, cinturón=0. ¿El LED rojo?',['Apagado','Encendido','Parpadea','No se sabe'],1,'NAND(1,0) = 1 → rojo encendido: falta el cinturón.']
+    ],[
+      ['➕ ¿Qué compuerta usa el sumador para calcular el bit de suma de dos bits?',['AND','NOR','XOR','NOT'],2,'XOR: 0+0=0, 0+1=1, 1+1=0 (y llevo 1).'],
+      ['🧮 Semisumador con A=1 y B=1: suma S = A⊕B y acarreo C = A·B. ¿Cuánto valen S y C?',['S=1, C=1','S=0, C=1','S=1, C=0','S=0, C=0'],1,'S = 1⊕1 = 0 y C = 1·1 = 1: en binario 1+1 = 10.'],
+      ['🔐 Cerradura que abre con A=1, B=0, C=1 (Y = A·¬B·C). ¿Qué necesitas?',['Una OR de 3 entradas','Una NOT en B y una AND de 3 entradas','Solo una XOR','Una NAND'],1,'Invertir B con NOT y luego AND de las tres señales.'],
+      ['💡 Pasillo con 3 interruptores: Y = A⊕B⊕C. Si A=1, B=1, C=1, ¿cuánto vale Y?',['0','1','No se puede','Depende del orden'],1,'(1⊕1)=0 y 0⊕1 = 1.'],
+      ['⚙️ Motor: arranca si (A OR B) AND NOT(emergencia). A=1, B=0, emergencia=1. ¿Motor?',['Arranca','No arranca','Gira al revés','Se reinicia'],1,'(1 OR 0)=1 pero NOT(1)=0 → 1 AND 0 = 0.']
+    ],[
+      ['🧠 Ley de De Morgan: ¬(A·B) es igual a…',['¬A · ¬B','¬A + ¬B','A + B','A ⊕ B'],1,'La negación de un AND es un OR de las negaciones.'],
+      ['🏗️ Con un 74HC00 (cuatro NAND) quieres una AND. ¿Cuántas NAND usas?',['1','2','3','4'],1,'Una NAND y otra NAND como inversor: ¬(¬(A·B)) = A·B.'],
+      ['🔢 Y = (A·B) + (C·D) con A=1, B=1, C=0, D=1. ¿Y vale?',['0','1','Indefinido','2'],1,'(1·1)=1 y (0·1)=0; 1+0 = 1.'],
+      ['🧱 Para una AND de 4 entradas (A·B·C·D) usando solo AND de 2 entradas, ¿cuántas necesitas?',['2','3','4','5'],1,'(A·B), (C·D) y luego la AND de ambos: 3 compuertas.'],
+      ['⚖️ Comparador de 2 bits: Y = (A1 XNOR B1) AND (A0 XNOR B0). A=10 y B=10. ¿Y?',['0','1','Error','10'],1,'Todos los bits son iguales → ambas XNOR dan 1 → Y = 1.']
+    ],[
+      ['🏰 Sumador completo con A=1, B=1 y acarreo de entrada Cin=1. ¿Cuánto valen S y Cout?',['S=0, Cout=1','S=1, Cout=1','S=1, Cout=0','S=0, Cout=0'],1,'1+1+1 = 3 = 11 en binario → S=1 y Cout=1.'],
+      ['🔀 Multiplexor 2→1: Y = (¬S·A) + (S·B). Con S=1, A=0, B=1, ¿Y vale?',['0','1','Indefinido','Igual a A'],1,'S=1 elige B: Y = B = 1.'],
+      ['🧩 El multiplexor anterior se arma con 1 NOT, 2 AND y 1 OR. ¿Cuántas compuertas en total?',['3','4','5','6'],1,'1 + 2 + 1 = 4 compuertas.'],
+      ['🔁 Un oscilador en anillo con compuertas NOT necesita…',['Un número par de NOT','Un número impar de NOT','Solo una AND','Un reloj externo'],1,'Con número impar la señal nunca se estabiliza y oscila.'],
+      ['🛡️ Bit de paridad PAR para los datos 1011 (se calcula con XOR de todos los bits). ¿Cuál es?',['0','1','10','Ninguno'],1,'1⊕0⊕1⊕1 = 1: con ese bit el total de unos es par.']
+    ]];
+    let sv = { ch:0, st:[0,0,0,0,0,0] };
+    const load = () => { sv = { ch:0, st:[0,0,0,0,0,0] }; try { const o = JSON.parse(store.get('reto_lv_adv') || 'null'); if (o) sv = Object.assign(sv, o); } catch (e) {} };
+    const save = () => store.set('reto_lv_adv', JSON.stringify(sv));
+    const unlocked = i => cur === '__docente' || i === 0 || sv.st[i - 1] > 0;
+
+    /* ---------- sprites ---------- */
+    function drawChar(g, c, x, y, face, fr, inv) {
+        if (inv && Math.floor(inv / 4) % 2) return;
+        g.save(); g.translate(x + 10, y); g.scale(face, 1); const r = (px, py, w, h, col) => { g.fillStyle = col; g.fillRect(px - 10, py, w, h); };
+        const st = fr ? Math.floor(fr / 6) % 2 : 0;
+        r(3, 20 + (st ? 0 : 2), 6, 8 - (st ? 0 : 2), c.pants); r(11, 20 + (st ? 2 : 0), 6, 8 - (st ? 2 : 0), c.pants);
+        r(2, 11, 16, 10, c.shirt); r(5, 14, 10, 7, c.pants); r(0, 12, 3, 7, c.shirt); r(17, 12, 3, 7, c.shirt);
+        r(3, 1, 14, 11, c.skin); r(2, 0, 16, 5, c.hat); r(10, 4, 9, 3, c.hat); r(12, 6, 2, 3, '#111');
+        if (c.acc === 'bow') { r(1, 0, 5, 5, '#fff'); r(4, 1, 3, 3, '#be185d'); }
+        if (c.acc === 'goggles') { r(3, 3, 14, 3, '#0ea5e9'); r(11, 3, 5, 4, '#bae6fd'); }
+        if (c.acc === 'bolt') { r(8, 0, 4, 2, '#fff'); r(9, 2, 3, 2, '#fff'); }
+        if (c.acc === 'antenna') { r(9, -6, 2, 6, '#475569'); r(8, -9, 4, 4, '#ef4444'); }
+        if (c.acc === 'crown') { r(3, -4, 14, 4, '#fde047'); r(3, -7, 3, 3, '#fde047'); r(8, -7, 3, 3, '#fde047'); r(14, -7, 3, 3, '#fde047'); }
+        g.restore();
+    }
+    window.avPrev = (cv, i) => { const g = cv.getContext('2d'); g.clearRect(0, 0, 40, 56); g.save(); g.scale(2, 2); drawChar(g, CHARS[i].c, 0, 12, 1, 0, 0); g.restore(); };
+
+    /* ---------- niveles ---------- */
+    function build(i) {
+        const L = 2400 + i * 350, S = (L - 800) / 5, pw = 60 + i * 10, pits = [], blocks = [], en = [], coins = [], pl = [];
+        for (let j = 0; j < 5; j++) {
+            const s = 400 + j * S;
+            if (j > 0) { pits.push([s, s + pw]); for (let k = 0; k < 3; k++) coins.push({ x:s + pw * (k + 1) / 4, y:GY - 100 + Math.abs(k - 1) * 20 }); }
+            const px = s + pw + 20; pl.push({ x:px, y:GY - 80, w:96, h:16, k:'p' }); for (let k = 0; k < 4; k++) coins.push({ x:px + 14 + k * 22, y:GY - 104 });
+            en.push({ x:s + pw + 40, y:GY - 20, w:24, h:20, d:1, x0:s + pw + 24, x1:s + S * 0.55, v:0.8 + i * 0.12, a:1 });
+            if (i >= 2) en.push({ x:s + S * 0.75, y:GY - 20, w:24, h:20, d:-1, x0:s + S * 0.7, x1:s + S - 30, v:1 + i * 0.1, a:1 });
+            blocks.push({ x:Math.round((s + S * 0.62) / 32) * 32, y:GY - 128, w:32, h:32, k:'b', q:Q[i][j], done:0 });
+            coins.push({ x:s + S * 0.85, y:GY - 30 });
+        }
+        const rects = []; let x = -40; pits.forEach(p => { rects.push({ x, y:GY, w:p[0] - x, h:H - GY, k:'g' }); x = p[1]; });
+        rects.push({ x, y:GY, w:L + 40 - x, h:H - GY, k:'g' }, { x:-60, y:-400, w:60, h:800, k:'w' }, { x:L + 40, y:-400, w:60, h:800, k:'w' });
+        return { L, pits, rects:rects.concat(pl, blocks), blocks, en, coins };
+    }
+
+    /* ---------- juego ---------- */
+    let G = null, lv = 0, raf = 0, last = 0, acc = 0, run = false;
+    const keys = { l:0, r:0, j:0 };
+    const dist = (a, b) => Math.abs(a - b);
+    function start(i) {
+        lv = i; const C = CHARS[sv.ch], B = build(i);
+        G = { B, C, p:{ x:60, y:GY - 28, w:20, h:28, vx:0, vy:0, on:0, f:1, hp:C.hp, inv:0, dj:C.dj, pj:0, fr:0 }, cam:0, cp:60, coins:0, ct:B.coins.length, solved:0, score:0, q:0, over:0, t:0 };
+        $('av-lname').textContent = `Mundo ${i + 1} · ${THEMES[i].n}`; $('av-modal').classList.remove('show'); $('av-end').classList.remove('show');
+        hud(); avShow('play'); run = true; last = performance.now(); acc = 0; cancelAnimationFrame(raf); raf = requestAnimationFrame(loop);
+    }
+    const hud = () => { $('av-hud').innerHTML = `${'❤️'.repeat(Math.max(G.p.hp, 0))}${'🖤'.repeat(Math.max(G.C.hp - G.p.hp, 0))} &nbsp; 🪙 ${G.coins} &nbsp; ❓ ${G.solved}/5`; };
+    function hurt(n) { const p = G.p; if (p.inv) return; p.hp--; p.inv = 90; p.vy = -6; p.vx = -p.f * 4; hud(); if (p.hp <= 0) end(0); }
+    function respawn() { const p = G.p; p.x = G.cp; p.y = GY - 60; p.vx = p.vy = 0; p.inv = 90; }
+    function step() {
+        const p = G.p, B = G.B, C = G.C; G.t++;
+        if (G.q || G.over) return;
+        const tv = (keys.r - keys.l) * C.spd; p.vx += (tv - p.vx) * 0.25; if (tv) p.f = tv > 0 ? 1 : -1; p.fr = Math.abs(p.vx) > 0.5 && p.on ? p.fr + 1 : 0;
+        if (keys.j && !p.pj) { if (p.on) { p.vy = -C.jmp; p.on = 0; } else if (p.dj > 0) { p.dj--; p.vy = -C.jmp * 0.9; } }
+        if (!keys.j && p.vy < -3) p.vy += 0.9; p.pj = keys.j; p.vy = Math.min(p.vy + 0.55, 12); if (p.inv) p.inv--;
+        p.x += p.vx; B.rects.forEach(r => { if (p.x < r.x + r.w && p.x + p.w > r.x && p.y < r.y + r.h && p.y + p.h > r.y) { p.x = p.vx > 0 ? r.x - p.w : r.x + r.w; p.vx = 0; } });
+        p.y += p.vy; p.on = 0;
+        for (const r of B.rects) if (p.x < r.x + r.w && p.x + p.w > r.x && p.y < r.y + r.h && p.y + p.h > r.y) {
+            if (p.vy > 0) { p.y = r.y - p.h; p.on = 1; p.dj = C.dj; } else { p.y = r.y + r.h; if (r.k === 'b' && !r.done) { p.vy = 1; ask(r); return; } }
+            p.vy = 0;
+        }
+        if (p.on && p.x > G.cp + 150 && !B.pits.some(q => dist(p.x, q[0]) < 110 || dist(p.x, q[1]) < 110)) G.cp = p.x;
+        if (p.y > H + 40) { p.hp--; hud(); if (p.hp <= 0) return end(0); respawn(); }
+        B.en.forEach(e => { if (!e.a) return; e.x += e.d * e.v; if (e.x < e.x0 || e.x > e.x1) e.d *= -1;
+            if (p.x < e.x + e.w && p.x + p.w > e.x && p.y < e.y + e.h && p.y + p.h > e.y) { if (p.vy > 1 && p.y + p.h - e.y < 16) { e.a = 0; p.vy = -8; G.score += 100; } else hurt(); } });
+        B.coins.forEach(c => { if (c.g) return; if (C.mg) { const dx = p.x + 10 - c.x, dy = p.y + 14 - c.y, d = Math.hypot(dx, dy); if (d < C.mg) { c.x += dx / d * 3; c.y += dy / d * 3; } }
+            if (Math.abs(p.x + 10 - c.x) < 16 && Math.abs(p.y + 14 - c.y) < 20) { c.g = 1; G.coins++; G.score += 10; hud(); } });
+        const fx = B.L - 160; if (G.solved === 5 && p.x > fx - 10) end(1);
+        else if (G.solved < 5 && p.x > fx - 10 && G.t % 90 === 0) toastMsg();
+        G.cam = Math.max(0, Math.min(B.L + 40 - W, p.x - W / 2 + 10));
+    }
+    const toastMsg = () => { try { toast('FALTAN RETOS', `Resuelve los 5 bloques ❓ (llevas ${G.solved}).`, 'bad', '🚩'); } catch (e) {} };
+
+    /* ---------- retos ---------- */
+    function ask(b) {
+        G.q = b; const [q, o, a, ex] = b.q, ord = o.map((t, i) => i).sort(() => Math.random() - .5);
+        $('av-modal').innerHTML = `<div><span class="av-tag">${THEMES[lv].t} · Reto ${G.solved + 1} de 5</span><div class="av-q">${q}</div>
+            ${ord.map(i => `<button class="av-o" data-i="${i}">${o[i]}</button>`).join('')}<div id="av-fb"></div></div>`;
+        $('av-modal').classList.add('show');
+        $('av-modal').querySelectorAll('.av-o').forEach(btn => btn.onclick = () => {
+            if (+btn.dataset.i === a) {
+                btn.classList.add('ok'); $('av-modal').querySelectorAll('.av-o').forEach(x => x.disabled = true);
+                b.done = 1; G.solved++; G.score += 200; G.cp = Math.max(G.cp, b.x - 70); hud();
+                $('av-fb').innerHTML = `<div class="av-fb">✅ <b>¡Correcto!</b> ${ex}</div><button class="av-btn" style="margin-top:8px" id="av-go">Continuar ▶</button>`;
+                $('av-go').onclick = () => { $('av-modal').classList.remove('show'); G.q = 0; if (G.solved === 5) try { toast('¡BANDERA ABIERTA!', 'Corre hasta el final del mundo 🚩', 'ok', '🎉'); } catch (e) {} };
+            } else {
+                btn.classList.add('bad'); btn.disabled = true; G.p.hp--; hud();
+                if (G.p.hp <= 0) { $('av-fb').innerHTML = '<div class="av-fb">❌ Te quedaste sin corazones.</div><button class="av-btn" style="margin-top:8px" id="av-go">Continuar</button>'; $('av-go').onclick = () => { $('av-modal').classList.remove('show'); G.q = 0; end(0); }; }
+                else $('av-fb').innerHTML = '<div class="av-fb">❌ Casi… pierdes 1 ❤️. ¡Piénsalo y prueba otra opción!</div>';
+            }
+        });
+    }
+    function end(win) {
+        G.over = 1; const p = G.p, el = $('av-end');
+        if (win) { const stars = 1 + (p.hp >= G.C.hp - 1 ? 1 : 0) + (G.coins >= G.ct * 0.6 ? 1 : 0); sv.st[lv] = Math.max(sv.st[lv], stars); save();
+            el.innerHTML = `<div style="text-align:center"><h2 class="av-h">🎉 ¡Mundo superado!</h2><div style="font-size:2.2rem">${'⭐'.repeat(stars)}${'☆'.repeat(3 - stars)}</div><p>Monedas: ${G.coins}/${G.ct} · Puntos: ${G.score}</p>
+            <button class="av-btn" onclick="avExit()">🗺️ Mapa</button> ${lv < 5 ? `<button class="av-btn" style="background:#16a34a" onclick="avStart(${lv + 1})">Siguiente mundo ▶</button>` : '<p>🏆 ¡Terminaste toda la aventura!</p>'}</div>`;
+            try { sfx.lvl(); } catch (e) {}
+        } else el.innerHTML = `<div style="text-align:center"><h2 class="av-h">💥 Sin corazones</h2><p>¡Inténtalo otra vez! Repasa la teoría y los proyectos del Tomo 5.</p><button class="av-btn" style="background:#16a34a" onclick="avStart(${lv})">🔁 Reintentar</button> <button class="av-btn" onclick="avExit()">🗺️ Mapa</button></div>`;
+        el.classList.add('show');
+    }
+
+    /* ---------- dibujo ---------- */
+    const cv = $('av-cv'), g = cv.getContext('2d');
+    function draw() {
+        const T = THEMES[lv], B = G.B, cx = Math.round(G.cam), t = G.t;
+        const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, T.sky[0]); gr.addColorStop(1, T.sky[1]); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+        g.fillStyle = T.hill; for (let i = -1; i < 6; i++) { const hx = i * 220 - (cx * 0.3) % 220; g.beginPath(); g.arc(hx + 110, GY + 20, 90 + (i % 2) * 30, Math.PI, 0); g.fill(); }
+        g.fillStyle = '#ffffffaa'; for (let i = 0; i < 5; i++) { const x = ((i * 260 - cx * 0.15) % 1300 + 1300) % 1300 - 100; g.fillRect(x, 40 + (i % 3) * 30, 70, 14); g.fillRect(x + 14, 30 + (i % 3) * 30, 40, 14); }
+        g.save(); g.translate(-cx, 0);
+        B.rects.forEach(r => { if (r.x + r.w < cx || r.x > cx + W || r.k === 'w') return;
+            if (r.k === 'g') { g.fillStyle = T.d; g.fillRect(r.x, r.y, r.w, r.h); g.fillStyle = T.g; g.fillRect(r.x, r.y, r.w, 10); g.fillStyle = '#0003'; for (let x = r.x + 8; x < r.x + r.w; x += 32) g.fillRect(x, r.y + 20, 8, 6); }
+            else if (r.k === 'p') { g.fillStyle = T.b; g.fillRect(r.x, r.y, r.w, r.h); g.fillStyle = '#0004'; g.fillRect(r.x, r.y + r.h - 3, r.w, 3); for (let x = r.x; x < r.x + r.w; x += 24) g.fillRect(x, r.y, 2, r.h); g.fillStyle = '#fff4'; g.fillRect(r.x, r.y, r.w, 3); }
+            else { g.fillStyle = r.done ? '#78716c' : '#fbbf24'; g.fillRect(r.x, r.y, 32, 32); g.strokeStyle = r.done ? '#44403c' : '#92400e'; g.lineWidth = 3; g.strokeRect(r.x + 1.5, r.y + 1.5, 29, 29); g.fillStyle = r.done ? '#d6d3d1' : '#fff'; g.font = 'bold 20px sans-serif'; g.textAlign = 'center'; g.fillText(r.done ? '✓' : '?', r.x + 16, r.y + 24 + (r.done ? 0 : Math.sin(t / 8) * 1.5)); }
+        });
+        B.coins.forEach(c => { if (c.g) return; const w = Math.abs(Math.cos(t / 12 + c.x)) * 6 + 2; g.fillStyle = '#fde047'; g.beginPath(); g.ellipse(c.x, c.y + Math.sin(t / 15 + c.x) * 2, w, 8, 0, 0, 7); g.fill(); g.strokeStyle = '#a16207'; g.lineWidth = 1.5; g.stroke(); });
+        B.en.forEach(e => { if (!e.a) return; const s = Math.floor(t / 8) % 2; g.fillStyle = '#7c3aed'; g.fillRect(e.x, e.y + 4, e.w, e.h - 8); g.fillRect(e.x + 3, e.y, e.w - 6, 5); g.fillStyle = '#4c1d95'; g.fillRect(e.x + 2, e.y + e.h - 5 + s, 6, 5 - s); g.fillRect(e.x + e.w - 8, e.y + e.h - 6 + (1 - s) + 1, 6, 5); g.fillStyle = '#fff'; g.fillRect(e.x + 5, e.y + 7, 5, 5); g.fillRect(e.x + 14, e.y + 7, 5, 5); g.fillStyle = '#111'; g.fillRect(e.x + 7, e.y + 9, 2, 3); g.fillRect(e.x + 16, e.y + 9, 2, 3); g.fillStyle = '#ef4444'; g.fillRect(e.x + 6, e.y - 4, 2, 5); g.fillRect(e.x + 16, e.y - 4, 2, 5); });
+        const fx = B.L - 160, ok = G.solved === 5; g.fillStyle = '#e5e7eb'; g.fillRect(fx, GY - 160, 5, 160); g.fillStyle = ok ? '#22c55e' : '#ef4444'; g.beginPath(); g.moveTo(fx + 5, GY - 158); g.lineTo(fx + 55, GY - 138 + Math.sin(t / 10) * 3); g.lineTo(fx + 5, GY - 118); g.fill(); g.fillStyle = '#fff'; g.font = 'bold 13px sans-serif'; g.textAlign = 'center'; g.fillText(ok ? '¡META!' : `❓ ${G.solved}/5`, fx + 2, GY - 168);
+        drawChar(g, G.C.c, G.p.x, G.p.y, G.p.f, G.p.fr, G.p.inv); g.restore();
+    }
+    function loop(now) {
+        if (!run) return; acc += Math.min(now - last, 100); last = now;
+        while (acc >= 16.67) { step(); acc -= 16.67; } draw(); raf = requestAnimationFrame(loop);
+    }
+
+    /* ---------- pantallas ---------- */
+    window.avShow = s => { ['select', 'map', 'play'].forEach(k => $('av-' + k).style.display = k === s ? '' : 'none'); if (s !== 'play') { run = false; cancelAnimationFrame(raf); } if (s === 'map') renderMap(); if (s === 'select') renderChars(); };
+    window.avExit = () => avShow('map'); window.avStart = start; window.avLeave = () => { run = false; cancelAnimationFrame(raf); if ($('av-play').style.display !== 'none') avShow('map'); };
+    function renderChars() { $('av-chars').innerHTML = CHARS.map((c, i) => `<div class="av-ch ${i === sv.ch ? 'on' : ''}" onclick="avPick(${i})"><canvas width="40" height="56" id="avc${i}"></canvas><b>${c.n}</b><small>${c.d}</small><small>Vel ${'▮'.repeat(Math.round(c.spd))} · Salto ${'▮'.repeat(Math.round(c.jmp / 3))} · ❤️${c.hp}</small></div>`).join(''); CHARS.forEach((c, i) => avPrev($('avc' + i), i)); }
+    window.avPick = i => { sv.ch = i; save(); avShow('map'); };
+    function renderMap() { $('av-who').textContent = 'Jugando con: ' + CHARS[sv.ch].n; $('av-levels').innerHTML = THEMES.map((t, i) => { const u = unlocked(i), s = sv.st[i];
+        return `<div class="av-lv ${u ? '' : 'lock'}" style="background:linear-gradient(135deg,${t.col},#0d1230)" ${u ? `onclick="avStart(${i})"` : ''}><span class="n">${i + 1}</span><b>${u ? '' : '🔒 '}${t.n}</b><small>Retos: ${t.t} · 5 bloques ❓</small><div style="margin-top:4px">${s ? '⭐'.repeat(s) + '☆'.repeat(3 - s) : u ? '▶ ¡Jugar!' : 'Supera el mundo anterior'}</div></div>`; }).join(''); }
+
+    /* ---------- controles ---------- */
+    const act = () => G && run && $('tab-aventura').classList.contains('active') && $('av-play').style.display !== 'none';
+    const kk = (e, v) => { if (!act()) return; const k = e.key.toLowerCase(); let h = 1;
+        if (k === 'arrowleft' || k === 'a') keys.l = v; else if (k === 'arrowright' || k === 'd') keys.r = v; else if (k === 'arrowup' || k === 'w' || k === ' ') keys.j = v; else h = 0; if (h) e.preventDefault(); };
+    addEventListener('keydown', e => kk(e, 1)); addEventListener('keyup', e => kk(e, 0));
+    [['av-bl', 'l'], ['av-br', 'r'], ['av-bj', 'j']].forEach(([id, k]) => { const b = $(id); ['pointerdown'].forEach(ev => b.addEventListener(ev, e => { e.preventDefault(); keys[k] = 1; })); ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, () => keys[k] = 0)); });
+    window.avInit = () => { load(); avShow($('av-map') && sv.seen ? 'map' : 'select'); };
+    window.avEnter = () => { load(); if ($('av-play').style.display === 'none') avShow(sv.seen ? 'map' : 'select'); };
+    const _pick = window.avPick; window.avPick = i => { sv.seen = 1; _pick(i); };
+    load(); renderChars();
 })();
 </script>
 </body>
