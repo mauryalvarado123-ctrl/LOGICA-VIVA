@@ -8,6 +8,41 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+<!-- Firebase Firestore: sincronización de estudiantes -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDn6g8iUJ307ZdrPUAVEjuxSe8fADG1ucw",
+    authDomain: "logica-viva.firebaseapp.com",
+    projectId: "logica-viva",
+    storageBucket: "logica-viva.firebasestorage.app",
+    messagingSenderId: "78465396693",
+    appId: "1:78465396693:web:edd0008b2ab386077e975c",
+    measurementId: "G-L7J2B2D613"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  // Recibir cambios de estudiantes desde otros equipos.
+  db.collection("estudiantes").onSnapshot((snapshot) => {
+    const remoteUsers = {};
+    snapshot.forEach((doc) => {
+      remoteUsers[doc.id] = doc.data();
+    });
+
+    localStorage.setItem('lv_users', JSON.stringify(remoteUsers));
+
+    const docenteModal = document.getElementById('docente');
+    if (docenteModal && docenteModal.classList.contains('show')) {
+      dcRender();
+    }
+  }, (error) => {
+    console.error("Error al sincronizar estudiantes desde Firebase:", error);
+  });
+</script>
+
 
 <!-- TEXTURAS Y CURSORES GENERADOS POR CÓDIGO (estilo Minecraft) -->
 <script>
@@ -1522,7 +1557,15 @@ function gradeQuiz() {
 /* ================= USUARIOS, PROGRESO Y PANEL DOCENTE ================= */
 const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const users = () => { try { return JSON.parse(localStorage.getItem('lv_users') || '{}'); } catch (e) { return {}; } };
-const saveUsers = u => store.set('lv_users', JSON.stringify(u));
+const saveUsers = u => {
+    store.set('lv_users', JSON.stringify(u));
+    if (typeof db !== 'undefined') {
+        Object.keys(u).forEach(id => {
+            db.collection("estudiantes").doc(id).set(u[id], { merge: true })
+                .catch(error => console.error("Error al guardar estudiante en Firebase:", error));
+        });
+    }
+};
 const slug = t => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const fdate = t => t ? new Date(t).toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Nunca';
 const $ = id => document.getElementById(id);
@@ -1573,7 +1616,7 @@ setInterval(() => { if (!cur || document.hidden) return; const us = users(); if 
 const POST_REQ = { tomos: 7, retos: 18, exam: 1 };   // requisitos para habilitar el postest
 const C1 = '#22d3ee', C2 = '#a78bfa', REV = [1, 5];
 const CONC = ['Razonamiento lógico (AND)', 'Circuito abierto / cerrado', 'Código binario', 'Condición OR', 'Componentes electrónicos', 'Interpretación de estados'];
-const LIK = ['Me llama la atención saber cómo funcionan por dentro los aparatos electrónicos.', 'Considero que los temas de circuitos y electrónica son demasiado difíciles para mí.', 'Aprendo más fácil cuando puedo manipular objetos reales que cuando solo copio del tablero.', 'Me entusiasma realizar experimentos y actividades prácticas en la clase de tecnología.', 'Me resulta fácil y agradable trabajar en equipo con mis compañeros de Noveno C.', 'Si un circuito o experimento no me funciona a la primera, me frustro y lo dejo de intentar.', 'Me gustaría aprender a construir o utilizar tableros y proyectos de tecnología en el colegio.'];
+const LIK = ['Me llama la atención saber cómo funcionan por dentro los aparatos electrónicos.', 'Considero que los temas de circuitos y electrónica son demasiado difíciles para mí.', 'Aprendo más fácil cuando puedo manipular objetos reales que cuando solo copio del tablero.', 'Me entusiasma realizar experimentos y actividades prácticas en la clase de tecnología.', 'Me resulta agradable trabajar en equipo con mis compañeros del colegio.', 'Si un circuito o experimento no me funciona a la primera, me frustro y lo dejo de intentar.', 'Me gustaría aprender a construir o utilizar tableros y proyectos de tecnología en el colegio.'];
 const OPEN = { pre: '¿Qué es lo que más te gustaría aprender o hacer en la clase de tecnología durante este proyecto?', post: '¿Qué fue lo que más aprendiste o disfrutaste durante este proyecto, y qué mejorarías?' };
 const APT = {
     pre: [
@@ -1704,13 +1747,21 @@ function dcRender() {
 }
 function dcDetail(id) {
     const u = userData(id), tb = (t, r) => r ? `<p style="margin:.2rem 0"><b>${t}:</b> lógica ${r.aptPct}% (${r.apt}/6) · motivación ${r.actPct}% · <span class="dim">${fdate(r.d)}</span></p><p class="dim" style="margin:0 0 .4rem">“${esc(r.open)}”</p>` : `<p class="dim" style="margin:.2rem 0"><b>${t}:</b> pendiente</p>`;
+    const P = u.pre, Q = u.post;
+    const charts = [
+        cbox('Promedio del estudiante: pretest vs postest', `Pretest ${P ? 'completado' : 'pendiente'} · Postest ${Q ? 'completado' : 'pendiente'}`, barChart(['Lógica y circuitos', 'Motivación'], [{ n: 'Pretest', c: C1, v: P ? [P.aptPct, P.actPct] : [null, null] }, { n: 'Postest', c: C2, v: Q ? [Q.aptPct, Q.actPct] : [null, null] } ])),
+        cbox('Aciertos por pregunta (%)', 'Porcentaje de respuestas correctas del estudiante', barChart(CONC.map((_, i) => 'P' + (i + 1)), [{ n: 'Pretest', c: C1, v: CONC.map((_, i) => P && P.ok ? P.ok[i] * 100 : null) }, { n: 'Postest', c: C2, v: CONC.map((_, i) => Q && Q.ok ? Q.ok[i] * 100 : null) }])),
+        cbox('Actitud por afirmación (promedio de 1 a 5)', 'A2 y A6 están invertidas: más alto siempre es más favorable', barChart(LIK.map((_, i) => 'A' + (i + 1)), [{ n: 'Pretest', c: C1, v: LIK.map((_, i) => P && P.lik ? lkAdj(P.lik[i], i) : null) }, { n: 'Postest', c: C2, v: LIK.map((_, i) => Q && Q.lik ? lkAdj(Q.lik[i], i) : null) }], 5, '')),
+        cbox('Avance por componente', 'Porcentaje completado en cada parte del proyecto', barChart(['Teoría', 'Retos', 'Examen', 'Avance total'], [{ n: 'Avance', c: C1, v: [Math.min(u.tomos.length, 7) / 7 * 100, u.retos.length / 18 * 100, u.best / 10 * 100, u.pct] }]))
+    ].join('');
     $('dc-detail').innerHTML = `<div class="box"><div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px"><h3 style="font-size:1.1rem;color:#fff;font-weight:700">${esc(u.name)} · ${esc(u.group || '—')}</h3><button class="mc-btn red sm" onclick="dcDel('${id}')"><i class="fa-solid fa-trash"></i>Eliminar</button></div>
     <p class="sub" style="margin:.2rem 0">Avance ${u.pct}% · ${Math.round((u.secs || 0) / 60)} min de uso · creado ${fdate(u.created)}</p>
-    <label style="display:block;font-size:.78rem;font-weight:600;color:#a5b4fc;margin-top:.6rem">Pretest y postest</label>${tb('Pretest', u.pre)}${tb('Postest', u.post)}
+    <label style="display:block;font-size:.78rem;font-weight:600;color:#a5b4fc;margin-top:.6rem">Pretest y postest</label>${tb('Pretest', P)}${tb('Postest', Q)}
     <label style="display:block;font-size:.78rem;font-weight:600;color:#a5b4fc;margin-top:.6rem">Retos superados (${u.retos.length} de 18)</label>
     <div class="rg">${Array.from({ length: 18 }, (_, i) => `<i class="${u.retos.includes(i) ? 'd' : ''}" title="${esc(logicChallenges[i].title)}">${i + 1}</i>`).join('')}</div>
     <label style="display:block;font-size:.78rem;font-weight:600;color:#a5b4fc;margin-top:.6rem">Intentos del examen</label>
-    <p>${u.att.length ? u.att.map(a => `${fdate(a.d)} → <b class="${a.s >= 6 ? 'ok' : ''}" style="${a.s < 6 ? 'color:#fb7185' : ''}">${a.s}/10</b>`).join(' &nbsp;·&nbsp; ') : '<span class="dim">Todavía no ha presentado el examen.</span>'}</p></div>`;
+    <p>${u.att.length ? u.att.map(a => `${fdate(a.d)} → <b class="${a.s >= 6 ? 'ok' : ''}" style="${a.s < 6 ? 'color:#fb7185' : ''}">${a.s}/10</b>`).join(' &nbsp;·&nbsp; ') : '<span class="dim">Todavía no ha presentado el examen.</span>'}</p></div>
+    <h3 style="font-size:1.1rem;color:#fff;font-weight:700;margin:1.2rem 0 .7rem">Gráficos de avance y diagnóstico</h3><div class="dc-charts">${charts}</div>`;
     $('dc-detail').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 function dcDel(id) {
